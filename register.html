@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fitlife - Register</title>
+
+  <!-- favicon -->
+  <link rel="shortcut icon" href="./favicon.svg" type="image/svg+xml">
+
+  <!-- custom css link -->
+  <link rel="stylesheet" href="./assets/css/style.css">
+
+  <!-- google font link -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Catamaran:wght@600;700;800;900&family=Rubik:wght@400;500;800&display=swap" rel="stylesheet">
+
+  <style>
+    body {
+      background-image: url('./assets/images/WORKOUT_DOUBLE_6909-Final.webp');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      height: 100vh;
+      margin: 0;
+      display: flex;
+      align-items: center;
+    }
+
+    #register-container {
+      background-color: rgba(255, 255, 255, 0.8); /* רקע לבן עם שקיפות */
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0px 0px 15px rgba(0, 0, 0, 0.5);
+      width: 100%;
+      max-width: 400px; /* רוחב מקסימלי לטופס */
+      margin-left: 50px; /* מרווח משמאל */
+    }
+  </style>
+</head>
+
+<body id="top">
+
+  <!-- #HEADER -->
+  <header class="header" data-header>
+    <div class="container">
+      <a href="#" class="logo">
+        <ion-icon name="barbell-sharp" aria-hidden="true"></ion-icon>
+        <span class="span">Fitlife</span>
+      </a>
+    </div>
+  </header>
+
+  <main>
+    <section class="section register-section">
+      <div id="register-container">
+        <h2>Register</h2>
+        <form action="/auth/register" method="POST">
+          <label for="firstName">First Name:</label>
+          <input type="text" id="firstName" name="firstName" required>
+          <br>
+          <label for="lastName">Last Name:</label>
+          <input type="text" id="lastName" name="lastName" required>
+          <br>
+          <label for="username">Username:</label>
+          <input type="text" id="username" name="username" required>
+          <br>
+          <label for="email">Email:</label>
+          <input type="email" id="email" name="email" required>
+          <br>
+          <label for="password">Password:</label>
+          <input type="password" id="password" name="password" required>
+          <br>
+          <button type="submit" class="btn btn-primary">Register</button>
+        </form>
+        <a href="login.html" class="btn btn-secondary">Back to Login</a>
+      </div>
+    </section>
+  </main>
+
+  <!-- custom js link -->
+  <script src="./assets/js/script.js" defer></script>
+
+  <!-- ionicon link -->
+  <script type="module" src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.esm.js"></script>
+  <script nomodule src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.js"></script>
+  <script>
+    function onFormSubmit() {
+        const username = document.getElementById('usernameInput').value;
+        window.location.href = `fitlife.html?username=${encodeURIComponent(username)}`;
+    }
+</script>
+
+</body>
+
+</html>
