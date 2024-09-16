@@ -2,12 +2,21 @@ const express = require('express');
 const mysql = require('mysql');
 const bodyParser = require('body-parser');
 const path = require('path');
+const session = require('express-session'); // נוסיף express-session
 
 const app = express();
 app.use(bodyParser.urlencoded({ extended: true }));
 
+// שימוש ב-sessionc   
+app.use(session({
+    secret: 'your-secret-key',  // מפתח סודי לשימוש ב-session
+    resave: false,
+    saveUninitialized: true
+}));
+
 // משרת קבצים סטטיים מהתיקייה הנוכחית
 app.use(express.static(__dirname));
+
 
 // חיבור למסד נתונים 
 const connection = mysql.createConnection({
@@ -38,8 +47,10 @@ app.post('/db.js', (req, res) => {
         if (err) throw err;
 
         if (results.length > 0) {
+            // אם ההתחברות מוצלחת, נשמור את שם המשתמש ב-session
+            req.session.username = username;
             console.log('Login OK');
-            res.redirect('/index1.html');
+            res.redirect('/index1.html'); // הפניה לדף index1.html
         } else {
             console.log('Login failed');
             res.send('Invalid username, password, or email.');
@@ -47,6 +58,52 @@ app.post('/db.js', (req, res) => {
     });
 });
 
+app.post('/register', (req, res) => {
+    const { firstName, lastName, username, email, password } = req.body;
+
+    // בדיקת קיום שם המשתמש
+    const checkUserQuery = 'SELECT * FROM project WHERE username = ?';
+    connection.query(checkUserQuery, [username], (err, results) => {
+        if (err) {
+            console.error('Error checking username:', err);
+            return res.send('Error checking username');
+        }
+
+        if (results.length > 0) {
+            // שם המשתמש כבר קיים
+            return res.send('Username already exists');
+        } else {
+            // אם שם המשתמש לא קיים, מבצעים את הרישום
+            const query = 'INSERT INTO project (firstName, lastName, username, email, password) VALUES (?, ?, ?, ?, ?)';
+            connection.query(query, [firstName, lastName, username, email, password], (err, result) => {
+                if (err) {
+                    console.error('Error registering user:', err);
+                    return res.send('Error registering user');
+                }
+
+                // אם הרישום הצליח, נשמור את שם המשתמש ב-session
+                req.session.username = username;
+                res.redirect('/index1.html'); // מפנה את המשתמש ל-index1.html
+            });
+        }
+    });
+});
+
+            
+        
+    
+
+
+
+// נתיב שמציג את שם המשתמש בדף index1.html
+app.get('/get-username', (req, res) => {
+    if (req.session.username) {
+        res.json({ username: req.session.username });
+    } else {
+        res.json({ username: req.session.username });
+    }
+});
+
 app.listen(3000, () => {
     console.log('Server is running on port 3000');
-});
+});     
