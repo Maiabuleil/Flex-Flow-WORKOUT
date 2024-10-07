@@ -5,7 +5,7 @@
   <meta charset="UTF-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Fitlife - Register</title>
+  <title>𝕱𝖑𝖊𝖝 & 𝕱𝖑𝖔𝖜 - Register</title>
 
   <!-- favicon -->
   <link rel="shortcut icon" href="./favicon.svg" type="image/svg+xml">
@@ -19,6 +19,40 @@
   <link href="https://fonts.googleapis.com/css2?family=Catamaran:wght@600;700;800;900&family=Rubik:wght@400;500;800&display=swap" rel="stylesheet">
 
   <style>
+        body {
+        margin: 0;
+        padding: 0;
+    }
+
+    .header {
+        padding: 100px 20px;
+        display: flex;
+        justify-content: center; /* מרכז את התוכן של הכותרת */
+        align-items: center; /* מיישר את האייקון והטקסט במרכז אנכית */
+        height: 100px;
+     
+    }
+
+    .container {
+        display: flex;
+        align-items: center; /* מיישר את האייקון והטקסט באותו קו אופקי */
+        justify-content: flex-end;
+   
+    }
+
+    .logo-icon {
+        font-size: 200px; /* גודל האייקון */
+        color: #000;
+         
+    }
+
+    .logo-text {
+        font-size: 160px; /* גודל הטקסט */
+        color: #000; /* צבע הטקסט */
+        margin-left: 10px; /* רווח קטן בין האייקון לטקסט */
+        font-family: 'Cinzel Decorative'; /* ניתן לשנות את הפונט */
+        display: inline-block; /* מוודא שהטקסט יהיה באותו קו עם האייקון */
+    }
     body {
       background-image: url('./assets/images/WORKOUT_DOUBLE_6909-Final.webp');
       background-size: cover;
@@ -47,10 +81,8 @@
   <!-- #HEADER -->
   <header class="header" data-header>
     <div class="container">
-      <a href="#" class="logo">
-        <ion-icon name="barbell-sharp" aria-hidden="true"></ion-icon>
-        <span class="span">Fitlife</span>
-      </a>
+      <ion-icon name="fitness-sharp" aria-hidden="true" class="logo-icon"></ion-icon>
+      <span class="logo-text">𝕱𝖑𝖊𝖝 & 𝕱𝖑𝖔𝖜</span>
     </div>
   </header>
 
@@ -58,7 +90,7 @@
     <section class="section register-section">
       <div id="register-container">
         <h2>Register</h2>
-        <form action="/auth/register" method="POST">
+        <form action="/register" method="POST">
           <label for="firstName">First Name:</label>
           <input type="text" id="firstName" name="firstName" required>
           <br>
@@ -88,10 +120,18 @@
   <script type="module" src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.esm.js"></script>
   <script nomodule src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.js"></script>
   <script>
-    function onFormSubmit() {
-        const username = document.getElementById('usernameInput').value;
-        window.location.href = `fitlife.html?username=${encodeURIComponent(username)}`;
-    }
+    document.getElementById('registerForm').addEventListener('submit', function(event) {
+        event.preventDefault(); // מונע את שליחת הטופס הסטנדרטית
+        
+        // קבלת שם המשתמש מהטופס
+        const username = document.getElementById('username').value;
+        
+        // שמירת שם המשתמש ב-localStorage
+        localStorage.setItem('username', username);
+        
+        // ניתוב לעמוד index1.html
+        window.location.href = 'index1.html';
+    });
 </script>
 
 </body>
