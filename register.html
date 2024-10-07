@@ -47,7 +47,7 @@
     }
 
     .logo-text {
-        font-size: 160px; /* גודל הטקסט */
+        font-size:160px; /* גודל הטקסט */
         color: #000; /* צבע הטקסט */
         margin-left: 10px; /* רווח קטן בין האייקון לטקסט */
         font-family: 'Cinzel Decorative'; /* ניתן לשנות את הפונט */
@@ -66,12 +66,12 @@
 
     #register-container {
       background-color: rgba(255, 255, 255, 0.8); /* רקע לבן עם שקיפות */
-      padding: 20px;
-      border-radius: 10px;
+      padding: 30px;
+      border-radius: 50px;
       box-shadow: 0px 0px 15px rgba(0, 0, 0, 0.5);
       width: 100%;
       max-width: 400px; /* רוחב מקסימלי לטופס */
-      margin-left: 50px; /* מרווח משמאל */
+      margin-left: 10px; /* מרווח משמאל */
     }
   </style>
 </head>
@@ -91,6 +91,7 @@
       <div id="register-container">
         <h2>Register</h2>
         <form action="/register" method="POST">
+
           <label for="firstName">First Name:</label>
           <input type="text" id="firstName" name="firstName" required>
           <br>
