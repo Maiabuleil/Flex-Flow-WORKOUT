@@ -5,7 +5,7 @@
   <meta charset="UTF-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>𝕱𝖑𝖊𝖝 & 𝕱𝖑𝖔𝖜 - Register</title>
+  <title>𝕱𝖑𝖊𝖝 & 𝕱𝖑𝖔𝖜 - Login</title>
 
   <!-- favicon -->
   <link rel="shortcut icon" href="./favicon.svg" type="image/svg+xml">
@@ -17,41 +17,41 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Catamaran:wght@600;700;800;900&family=Rubik:wght@400;500;800&display=swap" rel="stylesheet">
+  <main>
+   
 
+<body id="top">
+
+  <!-- #HEADER -->
   <style>
-        body {
+    body {
         margin: 0;
         padding: 0;
     }
 
     .header {
-        padding: 100px 20px;
-        display: flex;
-        justify-content: center; /* מרכז את התוכן של הכותרת */
-        align-items: center; /* מיישר את האייקון והטקסט במרכז אנכית */
-        height: 100px;
-     
+        padding: -10px 20px;
+        position: relative;
+         /* צבע רקע לכותרת */
     }
 
     .container {
         display: flex;
-        align-items: center; /* מיישר את האייקון והטקסט באותו קו אופקי */
-        justify-content: flex-end;
-   
+        align-items: center; /* יישור האייקון והטקסט באותו קו */
+        justify-content: flex-start; /* מיקום הטקסט והלוגו בצד שמאל */
     }
 
     .logo-icon {
-        font-size: 200px; /* גודל האייקון */
-        color: #000;
-         
+        font-size: 170px; /* גודל האייקון */
+        color: #000; /* צבע האייקון */
     }
 
     .logo-text {
         font-size: 160px; /* גודל הטקסט */
         color: #000; /* צבע הטקסט */
-        margin-left: 10px; /* רווח קטן בין האייקון לטקסט */
-        font-family: 'Cinzel Decorative'; /* ניתן לשנות את הפונט */
-        display: inline-block; /* מוודא שהטקסט יהיה באותו קו עם האייקון */
+        margin-left: -10px; /* רווח קטן בין האייקון לטקסט */
+        font-family: 'Cinzel Decorative'; /* ניתן להחליף לפונט אחר אם תרצה */
+        display: inline-block; /* שומר על הטקסט באותו קו עם האייקון */
     }
     body {
       background-image: url('./assets/images/WORKOUT_DOUBLE_6909-Final.webp');
@@ -64,51 +64,44 @@
       align-items: center;
     }
 
-    #register-container {
-      background-color: rgba(255, 255, 255, 0.8); /* רקע לבן עם שקיפות */
+    #login-container {
+      background-color: rgba(255, 255, 255, 0.8); /* White background with transparency */
       padding: 20px;
       border-radius: 10px;
       box-shadow: 0px 0px 15px rgba(0, 0, 0, 0.5);
       width: 100%;
-      max-width: 400px; /* רוחב מקסימלי לטופס */
-      margin-left: 50px; /* מרווח משמאל */
+      max-width: 400px; /* Maximum width for the form */
+      margin-left: 50px; /* Left margin */
     }
+  
   </style>
 </head>
-
-<body id="top">
-
-  <!-- #HEADER -->
-  <header class="header" data-header>
-    <div class="container">
-      <ion-icon name="fitness-sharp" aria-hidden="true" class="logo-icon"></ion-icon>
-      <span class="logo-text">𝕱𝖑𝖊𝖝 & 𝕱𝖑𝖔𝖜</span>
-    </div>
-  </header>
+<body>
 
   <main>
-    <section class="section register-section">
-      <div id="register-container">
-        <h2>Register</h2>
-        <form action="/register" method="POST">
-          <label for="firstName">First Name:</label>
-          <input type="text" id="firstName" name="firstName" required>
-          <br>
-          <label for="lastName">Last Name:</label>
-          <input type="text" id="lastName" name="lastName" required>
-          <br>
+    <header class="header" data-header>
+      <div class="container">
+        <ion-icon name="fitness-sharp" aria-hidden="true" class="logo-icon"></ion-icon>
+        <span class="logo-text">𝕱𝖑𝖊𝖝 & 𝕱𝖑𝖔𝖜</span>
+      </div>
+    </header>
+    <section class="section login-section">
+      <div id="login-container">
+        <h2>Login</h2>
+        <form action="/db.js" method="POST">
           <label for="username">Username:</label>
           <input type="text" id="username" name="username" required>
-          <br>
-          <label for="email">Email:</label>
-          <input type="email" id="email" name="email" required>
           <br>
           <label for="password">Password:</label>
           <input type="password" id="password" name="password" required>
           <br>
-          <button type="submit" class="btn btn-primary">Register</button>
+          <label for="email">Email:</label>
+          <input type="email" id="email" name="email" required>
+          <br>
+          <button type="submit" class="btn btn-primary">Login</button>
         </form>
-        <a href="login.html" class="btn btn-secondary">Back to Login</a>
+        <a href="register.html" class="btn btn-secondary">Register</a>
+        <a href="index.html" class="btn btn-secondary">back to home </a>
       </div>
     </section>
   </main>
@@ -119,21 +112,14 @@
   <!-- ionicon link -->
   <script type="module" src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.esm.js"></script>
   <script nomodule src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.js"></script>
+  
   <script>
-    document.getElementById('registerForm').addEventListener('submit', function(event) {
-        event.preventDefault(); // מונע את שליחת הטופס הסטנדרטית
-        
-        // קבלת שם המשתמש מהטופס
-        const username = document.getElementById('username').value;
-        
-        // שמירת שם המשתמש ב-localStorage
-        localStorage.setItem('username', username);
-        
-        // ניתוב לעמוד index1.html
-        window.location.href = 'index1.html';
-    });
+    function onFormSubmit() {
+        const username = document.getElementById('usernameInput').value;
+        window.location.href = `fitlife.html?username=${encodeURIComponent(username)}`;
+    }
 </script>
-
+  
 </body>
 
 </html>
