@@ -102,28 +102,29 @@ app.get('/get-username', (req, res) => {
 });
 // רוט: הוספת פידבק חדש
 app.post('/feedback1', (req, res) => {
-    const { name, email, workout, rating, comments} = req.body;
+    const { name, email, workout, rating, comments } = req.body;
 
-    // הכנסת הנתונים לטבלת feedback
-    const sql = 'INSERT INTO feedback1 (name, email, workout, rating, comments) VALUES (?, ?, ?, ?, ?)';
-    connection.query(sql, [name, email, workout, rating, comments], (err, result) => {
+    // הכנסה לטבלה
+    const sqlInsert = 'INSERT INTO feedback1 (name, email, workout, rating, comments) VALUES (?, ?, ?, ?, ?)';
+    connection.query(sqlInsert, [name, email, workout, rating, comments], (err) => {
         if (err) {
             console.error('Error inserting feedback:', err);
             return res.status(500).send('Error saving feedback.');
         }
-        res.send('Feedback submitted successfully!');
+
+        // שליפת כל הפידבקים לאחר ההוספה
+        const sqlSelect = 'SELECT * FROM feedback1 ORDER BY created_at DESC';
+        connection.query(sqlSelect, (err, results) => {
+            if (err) {
+                console.error('Error fetching feedback:', err);
+                return res.status(500).send('Error retrieving feedback.');
+            }
+            res.json(results); // מחזיר את כל הפידבקים
+        });
     });
 });
-app.get('/feedback1', (req, res) => {
-    const sql = 'SELECT * FROM feedback1';
-    connection.query(sql, (err, results) => {
-        if (err) {
-            console.error('Error fetching feedback:', err);
-            return res.status(500).send('Error retrieving feedback.');
-        }
-        res.json(results); // Send the feedback data as JSON
-    });
-});
+
+
 
   
   
