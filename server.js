@@ -89,9 +89,6 @@ app.post('/register', (req, res) => {
     });
 });
 
-            
-        
-    
 
 
 
@@ -103,7 +100,46 @@ app.get('/get-username', (req, res) => {
         res.json({ username: req.session.username });
     }
 });
+// רוט: הוספת פידבק חדש
+app.post('/feedback1', (req, res) => {
+    const { name, email, workout, rating, comments} = req.body;
 
+    // הכנסת הנתונים לטבלת feedback
+    const sql = 'INSERT INTO feedback1 (name, email, workout, rating, comments) VALUES (?, ?, ?, ?, ?)';
+    connection.query(sql, [name, email, workout, rating, comments], (err, result) => {
+        if (err) {
+            console.error('Error inserting feedback:', err);
+            return res.status(500).send('Error saving feedback.');
+        }
+        res.send('Feedback submitted successfully!');
+    });
+});
+app.get('/feedback1', (req, res) => {
+    const sql = 'SELECT * FROM feedback1';
+    connection.query(sql, (err, results) => {
+        if (err) {
+            console.error('Error fetching feedback:', err);
+            return res.status(500).send('Error retrieving feedback.');
+        }
+        res.json(results); // Send the feedback data as JSON
+    });
+});
+
+  
+  
+app.post('/contact1', (req, res) => {
+    const { name, email, phone } = req.body;
+
+    // Insert data into the contact table
+    const sql = 'INSERT INTO contact (name, email, phone) VALUES (?, ?, ?)';
+    connection.query(sql, [name, email, phone], (err, result) => {
+        if (err) {
+            console.error('Error inserting data:', err);
+            return res.status(500).send('Error saving contact.');
+        }
+        res.send('Contact saved successfully!');
+    });
+});  
 app.listen(3000, () => {
     console.log('Server is running on port 3000');
 });     
