@@ -135,7 +135,8 @@ app.post('/feedbacks', (req, res) => {
 });
 app.get('/feedbacks', (req, res) => {
     const query = `
-        SELECT f.*, r.reply, r.created_at AS reply_created_at 
+        SELECT f.id AS feedback_id, f.name, f.rating, f.comments, f.created_at,
+               r.id AS reply_id, r.reply, r.created_at AS reply_created_at 
         FROM feedback1 f 
         LEFT JOIN replies r ON f.id = r.feedback_id 
         ORDER BY f.created_at DESC
@@ -146,20 +147,25 @@ app.get('/feedbacks', (req, res) => {
             return res.status(500).send('Error retrieving feedbacks.');
         }
 
-        // ארגון תוצאות להצגת פידבקים עם תגובות
         const feedbacks = results.reduce((acc, row) => {
-            const feedback = acc.find(f => f.id === row.id);
+            let feedback = acc.find(f => f.id === row.feedback_id);
             if (!feedback) {
-                acc.push({
-                    id: row.id,
+                feedback = {
+                    id: row.feedback_id,
                     name: row.name,
                     rating: row.rating,
                     comments: row.comments,
                     created_at: row.created_at,
-                    replies: row.reply ? [{ reply: row.reply, created_at: row.reply_created_at }] : []
+                    replies: []
+                };
+                acc.push(feedback);
+            }
+            if (row.reply_id) {
+                feedback.replies.push({
+                    id: row.reply_id,
+                    reply: row.reply,
+                    created_at: row.reply_created_at
                 });
-            } else if (row.reply) {
-                feedback.replies.push({ reply: row.reply, created_at: row.reply_created_at });
             }
             return acc;
         }, []);
@@ -167,6 +173,7 @@ app.get('/feedbacks', (req, res) => {
         res.render('feedback.ejs', { feedbacks });
     });
 });
+
 
 app.post('/reply', (req, res) => {
     const { feedbackId, reply } = req.body;
@@ -181,6 +188,27 @@ app.post('/reply', (req, res) => {
         res.redirect('/feedbacks');  // הפניה חזרה לדף הפידבקים
     });
 });
+
+app.post('/delete-reply', (req, res) => {
+    console.log('Request body:', req.body); // בדיקה האם הנתונים נשלחים
+    const { replyId } = req.body;
+
+    if (!replyId) {
+        console.error('Reply ID is missing.');
+        return res.status(400).send('Reply ID is required.');
+    }
+
+    const query = 'DELETE FROM replies WHERE id = ?';
+    connection.query(query, [replyId], (err) => {
+        if (err) {
+            console.error('Error deleting reply:', err);
+            return res.status(500).send('Error deleting reply.');
+        }
+        console.log(`Reply with ID ${replyId} deleted.`);
+        res.redirect('/feedbacks'); // הפניה חזרה לדף הפידבקים
+    });
+});
+
 
 
 
