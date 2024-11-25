@@ -44,14 +44,23 @@
                     <% if (feedback.replies && feedback.replies.length > 0) { %>
                         <% feedback.replies.forEach(function(reply) { %>
                             <div style="margin-top: 10px; border-top: 1px solid #ddd; padding-top: 5px;">
-                                <p><strong>Reply:</strong> <%= reply.reply %></p>
+                                <p><strong>Reply :</strong> <%= reply.reply %></p>
                                 <small>Submitted on: <%= new Date(reply.created_at).toLocaleString() %></small>
+                                <!-- כפתור מחיקה -->
+                                <form action="/delete-reply" method="POST" style="display: inline;">
+                                    <input type="hidden" name="replyId" value="<%= reply.id %>">
+                                    <button type="submit" style="margin-left: 10px; background: red; color: white; border: none; padding: 5px 10px; cursor: pointer;">
+                                        Delete Reply
+                                    </button>
+                                </form>
+                                
                             </div>
                         <% }); %>
                     <% } else { %>
                         <p>No replies yet.</p>
                     <% } %>
                 </div>
+                
 
                 <!-- Reply section -->
                 <div class="reply-section">
@@ -82,4 +91,3 @@
     </script>
 </body>
 </html>
-
