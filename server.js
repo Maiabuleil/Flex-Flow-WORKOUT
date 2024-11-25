@@ -133,6 +133,55 @@ app.post('/feedbacks', (req, res) => {
         res.redirect('/feedbacks'); // לאחר שמירת הפידבק, מפנה לדף הפידבקים
     });
 });
+app.get('/feedbacks', (req, res) => {
+    const query = `
+        SELECT f.*, r.reply, r.created_at AS reply_created_at 
+        FROM feedback1 f 
+        LEFT JOIN replies r ON f.id = r.feedback_id 
+        ORDER BY f.created_at DESC
+    `;
+    connection.query(query, (err, results) => {
+        if (err) {
+            console.error('Error fetching feedbacks:', err);
+            return res.status(500).send('Error retrieving feedbacks.');
+        }
+
+        // ארגון תוצאות להצגת פידבקים עם תגובות
+        const feedbacks = results.reduce((acc, row) => {
+            const feedback = acc.find(f => f.id === row.id);
+            if (!feedback) {
+                acc.push({
+                    id: row.id,
+                    name: row.name,
+                    rating: row.rating,
+                    comments: row.comments,
+                    created_at: row.created_at,
+                    replies: row.reply ? [{ reply: row.reply, created_at: row.reply_created_at }] : []
+                });
+            } else if (row.reply) {
+                feedback.replies.push({ reply: row.reply, created_at: row.reply_created_at });
+            }
+            return acc;
+        }, []);
+
+        res.render('feedback.ejs', { feedbacks });
+    });
+});
+
+app.post('/reply', (req, res) => {
+    const { feedbackId, reply } = req.body;
+
+    // הכנס את התגובה לטבלת תגובות
+    const query = 'INSERT INTO replies (feedback_id, reply) VALUES (?, ?)';
+    connection.query(query, [feedbackId, reply], (err) => {
+        if (err) {
+            console.error('Error inserting reply:', err);
+            return res.status(500).send('Error saving reply.');
+        }
+        res.redirect('/feedbacks');  // הפניה חזרה לדף הפידבקים
+    });
+});
+
 
 
 
