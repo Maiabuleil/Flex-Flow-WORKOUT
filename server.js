@@ -2,11 +2,17 @@ const express = require('express');
 const mysql = require('mysql');
 const bodyParser = require('body-parser');
 const path = require('path');
-const session = require('express-session'); // נוסיף express-session
-
+const session = require('express-session'); 
 const app = express();
+app.set('view engine', 'ejs');
+app.set('views', path.join(__dirname, 'views'));
 app.use(bodyParser.urlencoded({ extended: true }));
 
+
+
+
+app.use(express.static('public')); // קבצים סטטיים (CSS, JS)
+app.use(bodyParser.urlencoded({ extended: true }));
 // שימוש ב-sessionc   
 app.use(session({
     secret: 'your-secret-key',  // מפתח סודי לשימוש ב-session
@@ -90,17 +96,6 @@ app.post('/register', (req, res) => {
 });
 
 
-
-
-// נתיב שמציג את שם המשתמש בדף index1.html
-app.get('/get-username', (req, res) => {
-    if (req.session.username) {
-        res.json({ username: req.session.username });
-    } else {
-        res.json({ username: req.session.username });
-    }
-});
-// רוט: הוספת פידבק חדש
 app.post('/feedback1', (req, res) => {
     const { name, email, workout, rating, comments } = req.body;
 
@@ -119,8 +114,23 @@ app.post('/feedback1', (req, res) => {
                 console.error('Error fetching feedback:', err);
                 return res.status(500).send('Error retrieving feedback.');
             }
-            res.json(results); // מחזיר את כל הפידבקים
+            res.render('feedback.ejs', { feedbacks: results });
         });
+    });
+});
+
+
+
+// נתיב להוספת פידבק
+app.post('/feedbacks', (req, res) => {
+    const { name, email, workout, rating, comments } = req.body;
+    const sql = 'INSERT INTO feedback1 (name, email, workout, rating, comments) VALUES (?, ?, ?, ?, ?)';
+    connection.query(sql, [name, email, workout, rating, comments], (err) => {
+        if (err) {
+            console.error('Error inserting feedback:', err);
+            return res.status(500).send('Error saving feedback.');
+        }
+        res.redirect('/feedbacks'); // לאחר שמירת הפידבק, מפנה לדף הפידבקים
     });
 });
 
