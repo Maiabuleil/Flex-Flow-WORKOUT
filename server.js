@@ -208,6 +208,17 @@ app.post('/delete-reply', (req, res) => {
         res.redirect('/feedbacks'); // הפניה חזרה לדף הפידבקים
     });
 });
+app.post('/edit-reply', (req, res) => {
+    const { replyId, reply } = req.body;
+    const query = "UPDATE replies SET reply = ? WHERE id = ?";
+    connection.query(query, [reply, replyId], (err, result) => {
+        if (err) {
+            console.error(err);
+            return res.status(500).send("Error updating reply.");
+        }
+        res.redirect('/feedbacks'); // דף הפידבק
+    });
+});
 
 
 
