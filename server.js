@@ -242,6 +242,21 @@ app.post('/delete-feedback', (req, res) => {
     });
 });
 
+app.post('/edit-feedback', (req, res) => {
+    const feedbackId = req.body.feedbackId;
+    const updatedComments = req.body.comments;
+
+    // עדכון הפידבק במסד הנתונים
+    connection.query('UPDATE feedback1 SET comments = ? WHERE id = ?', [updatedComments, feedbackId], (err) => {
+        if (err) {
+            console.error('Error updating feedback:', err);
+            return res.status(500).send('Error updating feedback.');
+        }
+
+        // הפניה חזרה לדף הפידבקים
+        res.redirect('/feedbacks');
+    });
+});
 
 
 
