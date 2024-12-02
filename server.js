@@ -219,6 +219,31 @@ app.post('/edit-reply', (req, res) => {
         res.redirect('/feedbacks'); // דף הפידבק
     });
 });
+app.post('/delete-feedback', (req, res) => {
+    const feedbackId = req.body.feedbackId; // מזהה הפידבק למחיקה
+
+    // מחיקת התגובות שקשורות לפידבק
+    connection.query('DELETE FROM replies WHERE feedback_id = ?', [feedbackId], (err) => {
+        if (err) {
+            console.error('Error deleting replies:', err);
+            return res.status(500).send('Error deleting replies.');
+        }
+
+        // מחיקת הפידבק עצמו
+        connection.query('DELETE FROM feedback1 WHERE id = ?', [feedbackId], (err) => {
+            if (err) {
+                console.error('Error deleting feedback:', err);
+                return res.status(500).send('Error deleting feedback.');
+            }
+
+            // הפניה חזרה לדף הפידבקים
+            res.redirect('/feedbacks');
+        });
+    });
+});
+
+
+
 
 
 
