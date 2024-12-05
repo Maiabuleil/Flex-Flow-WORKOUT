@@ -441,7 +441,7 @@ textarea {
 }
 
 button.submit-button {
-    background-color: #ff5733;
+  background-color: #ff3333;
     color: white;
     border: none;
     padding: 10px 20px;
@@ -453,7 +453,7 @@ button.submit-button {
 }
 
 button.submit-button:hover {
-    background-color: #e04a2b;
+  background-color: #ff3333;
 }
 
 .posts {
@@ -493,6 +493,25 @@ button.submit-button:hover {
     text-align: center;
     font-size: 1.2em;
 }
+.view-button {
+    background-color: #ff4d4d;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+.view-button:hover {
+    background-color: #ff3333;
+}
+
+.view-posts {
+    margin-top: 20px;
+    text-align: center;
+}
+
 </style>
  
   
@@ -518,6 +537,11 @@ button.submit-button:hover {
                 </div>
                 <button type="submit" class="submit-button">Publish Post</button>
             </form>
+            <div class="view-posts">
+              <button class="view-button" onclick="window.location.href='/view-posts';">View Posts</button>
+            </div>
+          </div>
+        </section>
   </main><!-- End #main -->
 
   <!-- ======= Footer ======= -->
