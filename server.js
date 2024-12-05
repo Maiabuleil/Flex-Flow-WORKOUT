@@ -260,11 +260,75 @@ app.post('/edit-feedback', (req, res) => {
 
 
 
+// הצגת דף הפוסטים
+app.get('/posts', (req, res) => {
+    if (!req.session.username) {
+        return res.redirect('/'); // המשתמש לא מחובר, מחזירים אותו לדף ההתחברות
+    }
+
+    const query = `
+        SELECT p.title, p.content, p.created_at, u.username 
+        FROM posts p 
+        JOIN project u ON p.user_id = u.id
+        ORDER BY p.created_at DESC
+    `;
+    connection.query(query, (err, results) => {
+        if (err) {
+            console.error('Error retrieving posts:', err);
+            return res.send('Error retrieving posts');
+        }
+
+        res.render('posts.ejs', { posts: results, username: req.session.username });
+    });
+});
+
+app.post('/add-post', (req, res) => {
+    if (!req.session.username) {
+        return res.status(401).send('Unauthorized: Please log in first.');
+    }
+
+    const { title, content } = req.body;
+
+    // בדיקת המשתמש המחובר
+    const query = 'SELECT id FROM project WHERE username = ?';
+    connection.query(query, [req.session.username], (err, results) => {
+        if (err) {
+            console.error('Error finding user:', err);
+            return res.send('Error finding user');
+        }
+
+        if (results.length > 0) {
+            const userId = results[0].id;
+
+            // הוספת הפוסט
+            const insertPostQuery = 'INSERT INTO posts (user_id, username, title, content) VALUES (?, ?, ?, ?)';
+            connection.query(insertPostQuery, [userId, req.session.username, title, content], (err, result) => {
+                if (err) {
+                    console.error('Error adding post:', err);
+                    return res.send('Error adding post');
+                }
+
+                res.redirect('/posts'); // הפניה לדף הפוסטים
+            });
+        } else {
+            res.send('User not found');
+        }
+    });
+});
 
 
 
 
-  
+
+
+
+app.get('/get-username', (req, res) => {
+    if (req.session.username) {
+        res.json({ username: req.session.username });
+    } else {
+        res.json({ username: req.session.username });
+    }
+});
   
 app.post('/contact1', (req, res) => {
     const { name, email, phone } = req.body;
@@ -278,7 +342,9 @@ app.post('/contact1', (req, res) => {
         }
         res.send('Contact saved successfully!');
     });
-});  
+});
+
+ 
 app.listen(3000, () => {
     console.log('Server is running on port 3000');
 });     
