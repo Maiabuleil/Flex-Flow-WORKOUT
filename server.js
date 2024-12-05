@@ -317,6 +317,62 @@ app.post('/add-post', (req, res) => {
 });
 
 
+app.get('/view-posts', (req, res) => {
+    const query = 'SELECT * FROM posts';
+  
+    connection.query(query, (err, results) => {
+      if (err) {
+        console.error('Error fetching posts:', err);
+        return res.status(500).send('Error fetching posts from the database');
+      }
+  
+      const postsHtml = results.map(post => `
+        <div>
+          <h3>${post.title}</h3>
+          <p><strong>${post.username}</strong></p>
+          <p>${post.content}</p>
+          <small>Posted on: ${new Date(post.created_at).toLocaleString()}</small>
+        </div>
+        <hr>
+      `).join('');
+  
+      res.send(`
+        <html>
+          <head>
+            <title>Workout Blog Posts</title>
+            <style>
+              body { font-family: Arial, sans-serif; margin: 20px; }
+              h3 { color: #ff4d4d; }
+              hr { margin: 20px 0; }
+              .back-button {
+                display: inline-block;
+                margin-top: 20px;
+                padding: 10px 20px;
+                font-size: 16px;
+                color: white;
+                background-color: #4CAF50;
+                border: none;
+                border-radius: 5px;
+                text-decoration: none;
+                text-align: center;
+                cursor: pointer;
+              }
+              .back-button:hover {
+                background-color: #45a049;
+              }
+            </style>
+          </head>
+          <body>
+            <h1>All Blog Posts</h1>
+            ${postsHtml}
+            <a href="/index1.html" class="back-button">Back to Home</a>
+          </body>
+        </html>
+      `);
+    });
+  });
+  
+  
 
 
 
