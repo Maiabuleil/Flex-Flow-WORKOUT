@@ -225,7 +225,7 @@ app.get('/feedbacks', (req, res) => {
 });
 
 
-app.post('/reply', (req, res) => {
+app.post('/reply', (req, res) => { 
     const { feedbackId, reply } = req.body;
     const username = req.session.username;
 
@@ -323,7 +323,41 @@ app.post('/delete-reply', (req, res) => {
 
         if (replyOwner !== username) {
             console.error('User does not have permission to delete this reply.');
-            return res.status(403).send('You do not have permission to delete this reply.');
+            return res.status(403).send(`
+                <html>
+                    <head>
+                        <title>Permission Denied</title>
+                        <style>
+                            body {
+                                font-family: Arial, sans-serif;
+                                text-align: center;
+                                margin: 50px;
+                            }
+                            .back-button {
+                                display: inline-block;
+                                margin-top: 20px;
+                                padding: 10px 20px;
+                                font-size: 16px;
+                                color: white;
+                                background-color: #4CAF50;
+                                border: none;
+                                border-radius: 5px;
+                                text-decoration: none;
+                                text-align: center;
+                                cursor: pointer;
+                            }
+                            .back-button:hover {
+                                background-color: #45a049;
+                            }
+                        </style>
+                    </head>
+                    <body>
+                        <h1>Permission Denied</h1>
+                        <p>You do not have permission to delete this reply.</p>
+                        <button onclick="window.history.back()" class="back-button">Go Back</button>
+                    </body>
+                </html>
+            `);
         }
 
         // Delete the reply
@@ -409,8 +443,44 @@ app.post('/edit-reply', (req, res) => {
         const replyOwner = results[0].username;
 
         if (replyOwner !== username) {
-            return res.status(403).send("You are not allowed to edit this reply.");
+            console.error('User does not have permission to delete this reply.');
+            return res.status(403).send(`
+                <html>
+                    <head>
+                        <title>Permission Denied</title>
+                        <style>
+                            body {
+                                font-family: Arial, sans-serif;
+                                text-align: center;
+                                margin: 50px;
+                            }
+                            .back-button {
+                                display: inline-block;
+                                margin-top: 20px;
+                                padding: 10px 20px;
+                                font-size: 16px;
+                                color: white;
+                                background-color: #4CAF50;
+                                border: none;
+                                border-radius: 5px;
+                                text-decoration: none;
+                                text-align: center;
+                                cursor: pointer;
+                            }
+                            .back-button:hover {
+                                background-color: #45a049;
+                            }
+                        </style>
+                    </head>
+                    <body>
+                        <h1>Permission Denied</h1>
+                        <p>You do not have permission to edit this reply.</p>
+                        <button onclick="window.history.back()" class="back-button">Go Back</button>
+                    </body>
+                </html>
+            `);
         }
+        
 
         // Update the reply
         const updateQuery = "UPDATE replies SET reply = ? WHERE id = ?";
@@ -491,8 +561,44 @@ app.post('/delete-feedback', (req, res) => {
         const feedbackOwner = results[0].username;
 
         if (feedbackOwner !== username) {
-            return res.status(403).send('You are not allowed to delete this feedback.');
+            console.error('User does not have permission to delete this feedback.');
+            return res.status(403).send(`
+                <html>
+                    <head>
+                        <title>Permission Denied</title>
+                        <style>
+                            body {
+                                font-family: Arial, sans-serif;
+                                text-align: center;
+                                margin: 50px;
+                            }
+                            .back-button {
+                                display: inline-block;
+                                margin-top: 20px;
+                                padding: 10px 20px;
+                                font-size: 16px;
+                                color: white;
+                                background-color: #4CAF50;
+                                border: none;
+                                border-radius: 5px;
+                                text-decoration: none;
+                                text-align: center;
+                                cursor: pointer;
+                            }
+                            .back-button:hover {
+                                background-color: #45a049;
+                            }
+                        </style>
+                    </head>
+                    <body>
+                        <h1>Permission Denied</h1>
+                        <p>You are not allowed to delete this feedback.</p>
+                        <button onclick="window.history.back()" class="back-button">Go Back</button>
+                    </body>
+                </html>
+            `);
         }
+        
 
         // Delete associated replies
         connection.query('DELETE FROM replies WHERE feedback_id = ?', [feedbackId], (err) => {
@@ -584,8 +690,44 @@ app.post('/edit-feedback', (req, res) => {
         const feedbackOwner = results[0].username;
 
         if (feedbackOwner !== username) {
-            return res.status(403).send('You are not allowed to edit this feedback.');
+            console.error('User does not have permission to edit this feedback.');
+            return res.status(403).send(`
+                <html>
+                    <head>
+                        <title>Permission Denied</title>
+                        <style>
+                            body {
+                                font-family: Arial, sans-serif;
+                                text-align: center;
+                                margin: 50px;
+                            }
+                            .back-button {
+                                display: inline-block;
+                                margin-top: 20px;
+                                padding: 10px 20px;
+                                font-size: 16px;
+                                color: white;
+                                background-color: #4CAF50;
+                                border: none;
+                                border-radius: 5px;
+                                text-decoration: none;
+                                text-align: center;
+                                cursor: pointer;
+                            }
+                            .back-button:hover {
+                                background-color: #45a049;
+                            }
+                        </style>
+                    </head>
+                    <body>
+                        <h1>Permission Denied</h1>
+                        <p>You are not allowed to edit this feedback.</p>
+                        <button onclick="window.history.back()" class="back-button">Go Back</button>
+                    </body>
+                </html>
+            `);
         }
+        
 
         // Update feedback in the database
         const updateQuery = 'UPDATE feedback1 SET comments = ? WHERE id = ?';
