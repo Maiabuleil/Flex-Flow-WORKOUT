@@ -98,14 +98,14 @@ app.post('/register', (req, res) => {
 
 
 app.post('/feedback1', (req, res) => {
-    const {  workout, rating, comments } = req.body;
+    const { workout, rating, comments } = req.body;
     const username = req.session.username;
 
     if (!username) {
         return res.status(401).send('User not logged in.');
     }
 
-    // הכנסה לטבלה
+    // Insert the new feedback into the database
     const sqlInsert = 'INSERT INTO feedback1 (username, workout, rating, comments) VALUES (?, ?, ?, ?)';
     connection.query(sqlInsert, [username, workout, rating, comments], (err) => {
         if (err) {
@@ -113,17 +113,55 @@ app.post('/feedback1', (req, res) => {
             return res.status(500).send('Error saving feedback.');
         }
 
-        // שליפת כל הפידבקים לאחר ההוספה
-        const sqlSelect = 'SELECT * FROM feedback1 ORDER BY created_at DESC';
+        // Fetch all feedbacks and their associated replies
+        const sqlSelect = `
+            SELECT 
+                f.id AS feedbackId, f.username AS feedbackUsername, f.workout, f.rating, f.comments, f.created_at AS feedbackCreatedAt,
+                r.id AS replyId, r.feedback_id AS replyFeedbackId, r.reply, r.username AS replyUsername, r.created_at AS replyCreatedAt
+            FROM feedback1 f
+            LEFT JOIN replies r ON f.id = r.feedback_id
+            ORDER BY f.created_at DESC, r.created_at ASC
+        `;
+
         connection.query(sqlSelect, (err, results) => {
             if (err) {
-                console.error('Error fetching feedback:', err);
+                console.error('Error fetching feedbacks and replies:', err);
                 return res.status(500).send('Error retrieving feedback.');
             }
-            res.render('feedback.ejs', { feedbacks:results, username: req.session.username});
+
+            // Group feedbacks and their replies
+            const feedbackMap = {};
+            results.forEach(row => {
+                if (!feedbackMap[row.feedbackId]) {
+                    feedbackMap[row.feedbackId] = {
+                        id: row.feedbackId,
+                        username: row.feedbackUsername,
+                        workout: row.workout,
+                        rating: row.rating,
+                        comments: row.comments,
+                        created_at: row.feedbackCreatedAt,
+                        replies: []
+                    };
+                }
+
+                if (row.replyId) {
+                    feedbackMap[row.feedbackId].replies.push({
+                        id: row.replyId,
+                        reply: row.reply,
+                        username: row.replyUsername,
+                        created_at: row.replyCreatedAt
+                    });
+                }
+            });
+
+            const feedbacks = Object.values(feedbackMap);
+
+            // Render the updated feedback page
+            res.render('feedback.ejs', { feedbacks, username });
         });
     });
 });
+
 
 
 
