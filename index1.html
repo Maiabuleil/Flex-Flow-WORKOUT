@@ -71,6 +71,7 @@
           <li><a class="nav-link scrollto" href="#about">Exercises</a></li>
           <li><a class="nav-link scrollto" href="#services">Sign Up</a></li>
           <li><a class="nav-link scrollto " href="#portfolio">Diet Advices</a></li>
+          <li><a class="nav-link scrollto " href="#Feedback">Feedback</a></li>
           <li><a class="nav-link scrollto" href="#contact">Blog</a></li>
           <li><a class="nav-link scrollto" href="#about-us">About us</a></li>
           <!-- <li class="dropdown"><a href="#"><span>Drop Down</span> <i class="bi bi-chevron-down"></i></a>
@@ -395,7 +396,209 @@
 
     </div>
   </section><!-- End Portfolio Section -->
- 
+   
+  <style>
+    .feedback-container {
+        max-width: 600px;
+        margin: 0 auto;
+        background-color: rgba(255, 255, 255, 0.8); /* רקע שקוף קל */
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0px 0px 15px rgba(0, 0, 0, 0.2);
+        font-family: Arial, sans-serif;
+    }
+
+    .feedback-container h2 {
+        text-align: center;
+        margin-bottom: 20px;
+    }
+
+    .input-group {
+        margin-bottom: 15px;
+    }
+
+    .input-group label {
+        display: block;
+        font-weight: bold;
+        margin-bottom: 5px;
+    }
+
+    .input-group input, .input-group select, .input-group textarea {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        font-size: 16px;
+    }
+
+    .star-rating {
+      display: flex; /* יישור הכוכבים בשורה אופקית */
+        gap: 15px; /* רווח בין הכוכבים */
+        font-size: 24px;
+    }
+
+    .star-rating input {
+        display: none;
+    }
+
+    .star-rating label {
+      cursor: pointer;
+        font-size: 20px; /* גודל הטקסט המתאר */
+        color: #000;
+        margin-left: 5px;
+    }
+
+    .star-rating input {
+        display: none; /* מחביא את התיבות הרדיו */
+    }
+
+    .star-rating input:checked + label {
+        color: rgb(255, 0, 0); /* משנה את צבע הכוכב כשהוא נבחר */
+    }
+
+    .submit-button {
+        background-color: #ff4d4d;
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 5px;
+        font-size: 18px;
+        cursor: pointer;
+        width: 100%;
+    }
+
+    .submit-button:hover {
+        background-color: #cc0000;
+    }
+</style>
+<style>
+    body {
+        margin: 0;
+        padding: 0;
+        background-color: #f0f0f0; /* צבע רקע לגוף */
+    }
+
+    /* Apply background image to the feedback container */
+    .feedback-container {
+        max-width: 600px;
+        margin: 0 auto;
+    
+        background-size: cover; /* התמונה תכסה את שטח המיכל */
+        background-position: center; /* מרכז את התמונה */
+        background-repeat: no-repeat; /* מונע חזרה של התמונה */
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0px 0px 15px rgba(0, 0, 0, 0.2);
+        font-family: Arial, sans-serif;
+        position: relative;
+    }
+
+    /* Semi-transparent background for the form content */
+    .feedback-content {
+        background-color: rgba(255, 255, 255, 0.8); /* רקע שקוף קל */
+        padding: 20px;
+        border-radius: 10px;
+    }
+
+
+  .feedback-container h2 {
+      text-align: center;
+      margin-bottom: 20px;
+  }
+
+  .input-group {
+      margin-bottom: 15px;
+  }
+
+  .input-group label {
+      display: block;
+      font-weight: bold;
+      margin-bottom: 5px;
+  }
+
+  .input-group input, .input-group select, .input-group textarea {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      font-size: 16px;
+  }
+
+  .star-rating {
+      display: flex; /* יישור הכוכבים בשורה אופקית */
+      gap: 15px; /* רווח בין הכוכבים */
+      font-size: 24px;
+  }
+
+  .star-rating input {
+      display: none;
+  }
+
+  .star-rating label {
+      cursor: pointer;
+      font-size: 20px; /* גודל הטקסט המתאר */
+      color: #000;
+      margin-left: 5px;
+  }
+
+  .star-rating input:checked + label {
+      color: rgb(255, 0, 0); /* משנה את צבע הכוכב כשהוא נבחר */
+  }
+
+  .submit-button {
+      background-color: #ff4d4d;
+      color: white;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 5px;
+      font-size: 18px;
+      cursor: pointer;
+      width: 100%;
+  }
+
+  .submit-button:hover {
+      background-color: #cc0000;
+  }
+</style>
+<section class="Feedback" id="Feedback" aria-label="blog" style="background-image: url('./assets/images/young-woman-boxer-training-gym_1303-18842.jpg'); background-size: cover; background-position: center; background-repeat: no-repeat; background-attachment: fixed;">
+  <div class="feedback-container">
+      <h2>Feedback</h2>
+      <form action="/feedback1" method="POST"> <!-- שימוש ב-POS -->
+      
+          
+          <div class="input-group">
+              <label for="workout">Workout Type</label>
+              <select id="workout" name="workout">
+                  <option value="yoga">Yoga</option>
+                  <option value="cardio">Cardio</option>
+                  <option value="strength">Strength Training</option>
+                  <option value="hiit">HIIT</option>
+              </select>
+          </div>
+          <div class="input-group">
+              <label for="rating">Rating</label>
+              <div class="star-rating">
+                  <input type="radio" name="rating" value="excellent" id="excellent" required>
+                  <label for="excellent">★ Excellent</label>
+                  <input type="radio" name="rating" value="good" id="good">
+                  <label for="good">★ Good</label>
+                  <input type="radio" name="rating" value="average" id="average">
+                  <label for="average">★ Average</label>
+                  <input type="radio" name="rating" value="poor" id="poor">
+                  <label for="poor">★ Poor</label>
+                  <input type="radio" name="rating" value="bad" id="bad">
+                  <label for="bad">★ Bad</label>
+              </div>
+          </div>
+          <div class="input-group">
+              <label for="comments">Your Feedback</label>
+              <textarea id="comments" name="comments" rows="4" required></textarea>
+          </div>
+          <button type="submit" class="submit-button">Submit Feedback</button>
+      </form>
+  </div>
+  
+</section>
   <style>
     .section.blog {
     padding: 50px 20px;
@@ -523,10 +726,7 @@ button.submit-button:hover {
               <h2>Workout Blog</h2>
               
               <form action="/add-post" method="POST">
-                <div class="input-group">
-                    <label for="username">Your Name</label>
-                    <input type="text" id="username" name="username" required>
-                </div>
+               
                 <div class="input-group">
                     <label for="title">Post Title</label>
                     <input type="text" id="title" name="title" required>
@@ -537,9 +737,7 @@ button.submit-button:hover {
                 </div>
                 <button type="submit" class="submit-button">Publish Post</button>
             </form>
-            <div class="view-posts">
-              <button class="view-button" onclick="window.location.href='/view-posts';">View Posts</button>
-            </div>
+                 
           </div>
         </section>
   </main><!-- End #main -->
