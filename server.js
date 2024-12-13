@@ -253,7 +253,7 @@ app.post('/reply', (req, res) => {
 
 
 app.post('/delete-reply', (req, res) => {
-    console.log('Request body:', req.body); // בדיקה האם הנתונים נשלחים
+    console.log('Request body:', req.body); // Debugging data
     const { replyId } = req.body;
 
     if (!replyId) {
@@ -261,16 +261,14 @@ app.post('/delete-reply', (req, res) => {
         return res.status(400).send('Reply ID is required.');
     }
 
-    // קבלת שם המשתמש מה-Session
     const username = req.session.username;
 
-    // בדיקה אם המשתמש מחובר
     if (!username) {
         console.error('User not logged in.');
         return res.status(401).send('Unauthorized.');
     }
 
-    // בדיקת בעלות על התגובה לפני מחיקה
+    // Check ownership of the reply before deletion
     const selectQuery = 'SELECT username FROM replies WHERE id = ?';
     connection.query(selectQuery, [replyId], (err, results) => {
         if (err) {
@@ -285,24 +283,69 @@ app.post('/delete-reply', (req, res) => {
 
         const replyOwner = results[0].username;
 
-        // בדיקה האם המשתמש הנוכחי הוא הבעלים של התגובה
         if (replyOwner !== username) {
             console.error('User does not have permission to delete this reply.');
             return res.status(403).send('You do not have permission to delete this reply.');
         }
 
-        // מחיקת התגובה
+        // Delete the reply
         const deleteQuery = 'DELETE FROM replies WHERE id = ?';
         connection.query(deleteQuery, [replyId], (err) => {
             if (err) {
                 console.error('Error deleting reply:', err);
                 return res.status(500).send('Error deleting reply.');
             }
+
             console.log(`Reply with ID ${replyId} deleted by user ${username}.`);
-            res.redirect('/feedbacks'); // הפניה חזרה לדף הפידבקים
+
+            // Fetch updated feedbacks and replies
+            const feedbackQuery = `
+                SELECT f.id AS feedbackId, f.username AS feedbackUsername, f.comments, f.created_at AS feedbackCreatedAt,
+                       r.id AS replyId, r.feedback_id AS replyFeedbackId, r.reply, r.username AS replyUsername, r.created_at AS replyCreatedAt
+                FROM feedback1 f
+                LEFT JOIN replies r ON f.id = r.feedback_id
+                ORDER BY f.created_at DESC, r.created_at ASC
+            `;
+
+            connection.query(feedbackQuery, (err, results) => {
+                if (err) {
+                    console.error('Error fetching updated feedbacks:', err);
+                    return res.status(500).send('Error fetching updated feedbacks.');
+                }
+
+                // Group feedbacks and their replies
+                const feedbacks = [];
+                const feedbackMap = {};
+
+                results.forEach(row => {
+                    if (!feedbackMap[row.feedbackId]) {
+                        feedbackMap[row.feedbackId] = {
+                            id: row.feedbackId,
+                            username: row.feedbackUsername,
+                            comments: row.comments,
+                            created_at: row.feedbackCreatedAt,
+                            replies: []
+                        };
+                        feedbacks.push(feedbackMap[row.feedbackId]);
+                    }
+
+                    if (row.replyId) {
+                        feedbackMap[row.feedbackId].replies.push({
+                            id: row.replyId,
+                            reply: row.reply,
+                            username: row.replyUsername,
+                            created_at: row.replyCreatedAt
+                        });
+                    }
+                });
+
+                // Render the updated feedback page
+                res.render('feedback.ejs', { feedbacks, username });
+            });
         });
     });
 });
+
 
 app.post('/edit-reply', (req, res) => {
     const { replyId, reply } = req.body;
@@ -387,19 +430,15 @@ app.post('/edit-reply', (req, res) => {
     });
 });
 
-
 app.post('/delete-feedback', (req, res) => {
-    const feedbackId = req.body.feedbackId; // מזהה הפידבק למחיקה
+    const feedbackId = req.body.feedbackId; // ID of the feedback to delete
+    const username = req.session.username; // Get username from the session
 
-    // קבלת שם המשתמש מה-Session
-    const username = req.session.username;
-
-    // בדיקה אם המשתמש מחובר
     if (!username) {
         return res.status(401).send('Unauthorized. Please log in.');
     }
 
-    // בדיקת בעלות על הפידבק
+    // Check ownership of the feedback
     const checkOwnershipQuery = 'SELECT username FROM feedback1 WHERE id = ?';
     connection.query(checkOwnershipQuery, [feedbackId], (err, results) => {
         if (err) {
@@ -413,19 +452,18 @@ app.post('/delete-feedback', (req, res) => {
 
         const feedbackOwner = results[0].username;
 
-        // בדיקה אם המשתמש הנוכחי הוא הבעלים של הפידבק
         if (feedbackOwner !== username) {
             return res.status(403).send('You are not allowed to delete this feedback.');
         }
 
-        // מחיקת התגובות שקשורות לפידבק
+        // Delete associated replies
         connection.query('DELETE FROM replies WHERE feedback_id = ?', [feedbackId], (err) => {
             if (err) {
                 console.error('Error deleting replies:', err);
                 return res.status(500).send('Error deleting replies.');
             }
 
-            // מחיקת הפידבק עצמו
+            // Delete the feedback itself
             connection.query('DELETE FROM feedback1 WHERE id = ?', [feedbackId], (err) => {
                 if (err) {
                     console.error('Error deleting feedback:', err);
@@ -433,11 +471,56 @@ app.post('/delete-feedback', (req, res) => {
                 }
 
                 console.log(`Feedback with ID ${feedbackId} deleted by user ${username}.`);
-                res.redirect('/feedbacks');
+
+                // Fetch updated feedbacks and replies
+                const feedbackQuery = `
+                    SELECT f.id AS feedbackId, f.username AS feedbackUsername, f.comments, f.created_at AS feedbackCreatedAt,
+                           r.id AS replyId, r.feedback_id AS replyFeedbackId, r.reply, r.username AS replyUsername, r.created_at AS replyCreatedAt
+                    FROM feedback1 f
+                    LEFT JOIN replies r ON f.id = r.feedback_id
+                    ORDER BY f.created_at DESC, r.created_at ASC
+                `;
+
+                connection.query(feedbackQuery, (err, results) => {
+                    if (err) {
+                        console.error('Error fetching updated feedbacks:', err);
+                        return res.status(500).send('Error fetching updated feedbacks.');
+                    }
+
+                    // Group feedbacks and their replies
+                    const feedbacks = [];
+                    const feedbackMap = {};
+
+                    results.forEach(row => {
+                        if (!feedbackMap[row.feedbackId]) {
+                            feedbackMap[row.feedbackId] = {
+                                id: row.feedbackId,
+                                username: row.feedbackUsername,
+                                comments: row.comments,
+                                created_at: row.feedbackCreatedAt,
+                                replies: []
+                            };
+                            feedbacks.push(feedbackMap[row.feedbackId]);
+                        }
+
+                        if (row.replyId) {
+                            feedbackMap[row.feedbackId].replies.push({
+                                id: row.replyId,
+                                reply: row.reply,
+                                username: row.replyUsername,
+                                created_at: row.replyCreatedAt
+                            });
+                        }
+                    });
+
+                    // Render the updated feedback page
+                    res.render('feedback.ejs', { feedbacks, username });
+                });
             });
         });
     });
 });
+
 
 
 app.post('/edit-feedback', (req, res) => {
