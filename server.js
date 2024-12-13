@@ -522,20 +522,16 @@ app.post('/delete-feedback', (req, res) => {
 });
 
 
-
 app.post('/edit-feedback', (req, res) => {
     const feedbackId = req.body.feedbackId;
     const updatedComments = req.body.comments;
+    const username = req.session.username; // Get username from session
 
-    // קבלת שם המשתמש מה-Session
-    const username = req.session.username;
-
-    // בדיקה אם המשתמש מחובר
     if (!username) {
         return res.status(401).send('Unauthorized. Please log in.');
     }
 
-    // בדיקת בעלות על הפידבק
+    // Check ownership of the feedback
     const checkOwnershipQuery = 'SELECT username FROM feedback1 WHERE id = ?';
     connection.query(checkOwnershipQuery, [feedbackId], (err, results) => {
         if (err) {
@@ -549,12 +545,11 @@ app.post('/edit-feedback', (req, res) => {
 
         const feedbackOwner = results[0].username;
 
-        // בדיקה אם המשתמש הנוכחי הוא הבעלים של הפידבק
         if (feedbackOwner !== username) {
             return res.status(403).send('You are not allowed to edit this feedback.');
         }
 
-        // עדכון הפידבק במסד הנתונים
+        // Update feedback in the database
         const updateQuery = 'UPDATE feedback1 SET comments = ? WHERE id = ?';
         connection.query(updateQuery, [updatedComments, feedbackId], (err) => {
             if (err) {
@@ -563,10 +558,55 @@ app.post('/edit-feedback', (req, res) => {
             }
 
             console.log(`Feedback with ID ${feedbackId} updated by user ${username}.`);
-            res.redirect('/feedbacks');
+
+            // Fetch updated feedbacks and replies
+            const feedbackQuery = `
+                SELECT f.id AS feedbackId, f.username AS feedbackUsername, f.comments, f.created_at AS feedbackCreatedAt,
+                       r.id AS replyId, r.feedback_id AS replyFeedbackId, r.reply, r.username AS replyUsername, r.created_at AS replyCreatedAt
+                FROM feedback1 f
+                LEFT JOIN replies r ON f.id = r.feedback_id
+                ORDER BY f.created_at DESC, r.created_at ASC
+            `;
+
+            connection.query(feedbackQuery, (err, results) => {
+                if (err) {
+                    console.error('Error fetching updated feedbacks:', err);
+                    return res.status(500).send('Error fetching updated feedbacks.');
+                }
+
+                // Group feedbacks and their replies
+                const feedbacks = [];
+                const feedbackMap = {};
+
+                results.forEach(row => {
+                    if (!feedbackMap[row.feedbackId]) {
+                        feedbackMap[row.feedbackId] = {
+                            id: row.feedbackId,
+                            username: row.feedbackUsername,
+                            comments: row.comments,
+                            created_at: row.feedbackCreatedAt,
+                            replies: []
+                        };
+                        feedbacks.push(feedbackMap[row.feedbackId]);
+                    }
+
+                    if (row.replyId) {
+                        feedbackMap[row.feedbackId].replies.push({
+                            id: row.replyId,
+                            reply: row.reply,
+                            username: row.replyUsername,
+                            created_at: row.replyCreatedAt
+                        });
+                    }
+                });
+
+                // Render the updated feedback page
+                res.render('feedback.ejs', { feedbacks, username });
+            });
         });
     });
 });
+
 app.get('/view-feedback', (req, res) => {
     const query = 'SELECT * FROM feedback1';
 
