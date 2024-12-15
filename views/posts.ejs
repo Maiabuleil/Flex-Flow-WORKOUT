@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Posts</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f9f9f9;
+            margin: 0;
+            padding: 0;
+            line-height: 1.6;
+            color: #333;
+        }
+
+        h1 {
+            background-color: #4CAF50;
+            color: white;
+            text-align: center;
+            margin: 0;
+            padding: 1rem;
+        }
+
+        h2 {
+            margin: 20px auto;
+            text-align: center;
+            color: #555;
+        }
+
+        .posts-container {
+            width: 90%;
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .post {
+            border-bottom: 1px solid #ccc;
+            padding: 15px 0;
+        }
+
+        .post:last-child {
+            border-bottom: none;
+        }
+
+        .post h3 {
+            margin: 0;
+            color: #333;
+        }
+
+        .post p {
+            margin: 10px 0;
+            color: #555;
+        }
+
+        .post small {
+            color: #888;
+        }
+
+        .footer {
+            text-align: center;
+            margin: 20px 0;
+            font-size: 0.9rem;
+            color: #666;
+        }
+        .replies {
+    margin-top: 15px;
+    padding-left: 20px;
+    border-left: 2px solid #ddd;
+}
+
+.reply {
+    margin-bottom: 10px;
+}
+
+.reply p {
+    margin: 0;
+    color: #555;
+}
+
+.reply small {
+    color: #888;
+    font-size: 0.85rem;
+}
+    </style>
+</head>
+<body>
+    <h1>Welcome, <%= username %>!</h1>
+
+    <h2>All Posts</h2>
+    <div class="posts-container">
+        <% posts.forEach(post => { %>
+            <div class="post">
+                <h3><%= post.title %></h3>
+                <p><%= post.content %></p>
+                <small>By <%= post.username %>, <%= post.created_at %></small>
+        
+                <h3>Replies:</h3>
+                <ul>
+                    <% post.replies.forEach(reply => { %>
+                        <li>
+                            <p><%= reply.reply_text %></p>
+                            <small>Replied by <%= reply.username %> on <%= reply.created_at %></small>
+        
+                           
+               
+                            <form action="/delete-replys" method="POST" style="display: inline;">
+                                <input type="hidden" name="replyId" value="<%= reply.id %>">
+                                <button type="submit" style="margin-top: 10px; background: red; color: white; border: none; ">
+                                    Delete Reply
+                                </button>
+                            </form>
+                                
+                                
+                            
+                        </li>
+                    <% }); %>
+                </ul>
+        
+                <form action="/add-reply/<%= post.id %>" method="POST">
+                    <textarea name="replyText" placeholder="Write your reply here..." required></textarea>
+                    <button type="submit">Reply</button>
+                </form>
+            </div>
+        <% }); %>
+        
+        
+            
+            
+    <div style="text-align: center; margin-top: 20px;">
+        <button onclick="location.href='/index1.html'" style="padding: 10px 20px; font-size: 16px; cursor: pointer;">
+            Back to Home
+        </button>
+    </div>  <button type="submit">Delete</button>
+                                </form>
+    <div class="footer">
+        &copy; 2024 Flex & Flow. All Rights Reserved By <a href="#" class="copyright-link">MAIABULEIL</a></p>
+    </div>
+    <script>
+    function deleteReply(replyId) {
+        fetch(`/delete-replys/${replyId}`, {
+            method: 'DELETE'
+        }).then(response => {
+            if (response.ok) {
+                alert('Reply deleted successfully');
+                window.location.reload(); // Refresh the page
+            } else {
+                response.text().then(msg => alert(msg));
+            }
+        }).catch(error => {
+            console.error('Error:', error);
+        });
+    }
+</script> 
+</body>
+</html>
