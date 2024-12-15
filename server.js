@@ -892,13 +892,13 @@ app.get('/view-feedback', (req, res) => {
     }
 
     const query = `
-        SELECT p.id AS post_id, p.title, p.content, p.created_at, u.username,
-               r.reply_text, r.created_at AS reply_created_at, r.username AS reply_username
-        FROM posts p
-        JOIN project u ON p.user_id = u.id
-        LEFT JOIN post_replies r ON p.id = r.post_id
-        ORDER BY p.created_at DESC, r.created_at ASC
-    `;
+    SELECT 
+        p.id AS post_id, p.user_id AS post_user_id, p.username AS post_username, p.title, p.content, p.created_at AS post_created_at,
+        r.id AS reply_id, r.post_id AS reply_post_id, r.reply_text, r.user_id AS reply_user_id, r.username AS reply_username, r.created_at AS reply_created_at
+    FROM posts p
+    LEFT JOIN post_replies r ON p.id = r.post_id
+    ORDER BY p.created_at DESC, r.created_at ASC
+`;
 
     connection.query(query, (err, results) => {
         if (err) {
@@ -906,31 +906,34 @@ app.get('/view-feedback', (req, res) => {
             return res.send('Error retrieving posts');
         }
 
-        const posts = {};
-
-        // ארגון התוצאות בקבוצות לפי פוסטים ותגובות
-        results.forEach(row => {
-            if (!posts[row.post_id]) {
-                posts[row.post_id] = {
+        const posts = results.reduce((acc, row) => {
+            let post = acc.find(p => p.id === row.post_id);
+            if (!post) {
+                post = {
                     id: row.post_id,
+                    user_id: row.post_user_id,
+                    username: row.post_username,
                     title: row.title,
                     content: row.content,
-                    created_at: row.created_at,
-                    username: row.username,
+                    created_at: row.post_created_at,
                     replies: []
                 };
+                acc.push(post);
             }
-
-            if (row.reply_text) {
-                posts[row.post_id].replies.push({
+            if (row.reply_id) {
+                post.replies.push({
+                    id: row.reply_id,
+                    post_id: row.reply_post_id,
+                    user_id: row.reply_user_id,
+                    username: row.reply_username,
                     reply_text: row.reply_text,
-                    created_at: row.reply_created_at,
-                    username: row.reply_username
+                    created_at: row.reply_created_at
                 });
             }
-        });
+            return acc;
+        }, []);
 
-        res.render('posts.ejs', { posts: Object.values(posts), username: req.session.username });
+        res.render('posts.ejs', { posts, username: req.session.username });
     });
 });
 
@@ -1060,7 +1063,7 @@ app.get('/view-posts', (req, res) => {
     });
 });
 app.post('/delete-replys', (req, res) => {
-    console.log('Request body:', req.body); // בדיקה האם הנתונים נשלחים
+    console.log('Request body:', req.body); // Debugging data
     const { replyId } = req.body;
 
     if (!replyId) {
@@ -1068,16 +1071,14 @@ app.post('/delete-replys', (req, res) => {
         return res.status(400).send('Reply ID is required.');
     }
 
-    // קבלת שם המשתמש מה-Session
     const username = req.session.username;
 
-    // בדיקה אם המשתמש מחובר
     if (!username) {
         console.error('User not logged in.');
         return res.status(401).send('Unauthorized.');
     }
 
-    // בדיקת בעלות על התגובה לפני מחיקה
+    // Check ownership of the reply before deletion
     const selectQuery = 'SELECT username FROM post_replies WHERE id = ?';
     connection.query(selectQuery, [replyId], (err, results) => {
         if (err) {
@@ -1092,24 +1093,105 @@ app.post('/delete-replys', (req, res) => {
 
         const replyOwner = results[0].username;
 
-        // בדיקה האם המשתמש הנוכחי הוא הבעלים של התגובה
         if (replyOwner !== username) {
             console.error('User does not have permission to delete this reply.');
-            return res.status(403).send('You do not have permission to delete this reply.');
+            return res.status(403).send(`
+                <html>
+                    <head>
+                        <title>Permission Denied</title>
+                        <style>
+                            body {
+                                font-family: Arial, sans-serif;
+                                text-align: center;
+                                margin: 50px;
+                            }
+                            .back-button {
+                                display: inline-block;
+                                margin-top: 20px;
+                                padding: 10px 20px;
+                                font-size: 16px;
+                                color: white;
+                                background-color: #4CAF50;
+                                border: none;
+                                border-radius: 5px;
+                                text-decoration: none;
+                                text-align: center;
+                                cursor: pointer;
+                            }
+                            .back-button:hover {
+                                background-color: #45a049;
+                            }
+                        </style>
+                    </head>
+                    <body>
+                        <h1>Permission Denied</h1>
+                        <p>You do not have permission to delete this reply.</p>
+                        <button onclick="window.history.back()" class="back-button">Go Back</button>
+                    </body>
+                </html>
+            `);
         }
 
-        // מחיקת התגובה
+        // Delete the reply
         const deleteQuery = 'DELETE FROM post_replies WHERE id = ?';
         connection.query(deleteQuery, [replyId], (err) => {
             if (err) {
                 console.error('Error deleting reply:', err);
                 return res.status(500).send('Error deleting reply.');
             }
+
             console.log(`Reply with ID ${replyId} deleted by user ${username}.`);
-            res.redirect('/posts'); // הפניה חזרה לדף הפידבקים
+
+            // Fetch updated posts and replies
+            const postsQuery = `
+                SELECT 
+                    p.id AS postId, p.username AS postUsername, p.title, p.content, p.created_at AS postCreatedAt,
+                    r.id AS replyId, r.post_id AS replyPostId, r.reply_text, r.username AS replyUsername, r.created_at AS replyCreatedAt
+                FROM posts p
+                LEFT JOIN post_replies r ON p.id = r.post_id
+                ORDER BY p.created_at DESC, r.created_at ASC
+            `;
+
+            connection.query(postsQuery, (err, results) => {
+                if (err) {
+                    console.error('Error fetching updated posts:', err);
+                    return res.status(500).send('Error fetching updated posts.');
+                }
+
+                // Group posts and their replies
+                const posts = [];
+                const postMap = {};
+
+                results.forEach(row => {
+                    if (!postMap[row.postId]) {
+                        postMap[row.postId] = {
+                            id: row.postId,
+                            username: row.postUsername,
+                            title: row.title,
+                            content: row.content,
+                            created_at: row.postCreatedAt,
+                            replies: []
+                        };
+                        posts.push(postMap[row.postId]);
+                    }
+
+                    if (row.replyId) {
+                        postMap[row.postId].replies.push({
+                            id: row.replyId,
+                            reply_text: row.reply_text,
+                            username: row.replyUsername,
+                            created_at: row.replyCreatedAt
+                        });
+                    }
+                });
+
+                // Render the updated posts page
+                res.render('posts.ejs', { posts, username });
+            });
         });
     });
 });
+
 
 
 
