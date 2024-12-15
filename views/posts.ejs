@@ -166,7 +166,35 @@
                         </button>
                     </form>
                 </div>
-                
+                <button 
+    onclick="toggleEditForm('<%= post.id %>')" 
+    style="margin-top: 10px; background-color: #007bff; color: white; padding: 5px 10px; border: none; border-radius: 5px; cursor: pointer;">
+    EDIT POST
+</button>
+
+<!-- טופס לעריכה -->
+<form 
+    id="edit-form-<%= post.id %>" 
+    style="display: none; margin-top: 10px;" 
+    method="POST" 
+    action="/edit-post">
+    <!-- שדה לעריכת תוכן הפוסט -->
+    <textarea 
+        name="content" 
+        rows="3" 
+        style="width: 100%; border-radius: 5px; padding: 10px; font-size: 14px;"><%= post.content %></textarea>
+    
+    <!-- מזהה הפוסט -->
+    <input type="hidden" name="postId" value="<%= post.id %>">
+    
+    <!-- כפתור שמירת השינויים -->
+    <button 
+        type="submit" 
+        style="margin-top: 10px; background-color: #28a745; color: white; padding: 5px 10px; border: none; border-radius: 5px; cursor: pointer;">
+        SAVE
+    </button>
+</form>
+
             </div>
         <% }); %>
         
@@ -202,6 +230,13 @@
     // פונקציה לפתיחת/סגירת טופס העריכה
     function toggleEditReplyForm(replyId) {
         const form = document.getElementById(`edit-reply-form-${replyId}`);
+        form.style.display = form.style.display === 'none' ? 'block' : 'none';
+    }
+</script>
+<script>
+    // פונקציה לפתיחת/סגירת טופס העריכה
+    function toggleEditForm(postId) {
+        const form = document.getElementById(`edit-form-${postId}`);
         form.style.display = form.style.display === 'none' ? 'block' : 'none';
     }
 </script>
