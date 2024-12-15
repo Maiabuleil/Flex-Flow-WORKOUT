@@ -106,7 +106,8 @@
                             <p><%= reply.reply_text %></p>
                             <small>Replied by <%= reply.username %> on <%= reply.created_at %></small>
         
-                           
+                        
+                            
                
                             <form action="/delete-replys" method="POST" style="display: inline;">
                                 <input type="hidden" name="replyId" value="<%= reply.id %>">
@@ -152,6 +153,20 @@
                     <textarea name="replyText" placeholder="Write your reply here..." required></textarea>
                     <button type="submit">Reply</button>
                 </form>
+                <div class="delete-section">
+                    <form method="POST" action="/delete-post">
+                        <!-- מזהה הפוסט שמועבר לשרת -->
+                        <input type="hidden" name="postId" value="<%= post.id %>">
+                        <!-- כפתור מחיקה -->
+                        <button 
+                            type="submit" 
+                            class="delete-button" 
+                            style="background-color: #dc3545; color: white; padding: 10px 20px; border-radius: 5px; border: none; cursor: pointer;">
+                            Delete Post
+                        </button>
+                    </form>
+                </div>
+                
             </div>
         <% }); %>
         
@@ -162,8 +177,7 @@
         <button onclick="location.href='/index1.html'" style="padding: 10px 20px; font-size: 16px; cursor: pointer;">
             Back to Home
         </button>
-    </div>  <button type="submit">Delete</button>
-                                </form>
+   
     <div class="footer">
         &copy; 2024 Flex & Flow. All Rights Reserved By <a href="#" class="copyright-link">MAIABULEIL</a></p>
     </div>
