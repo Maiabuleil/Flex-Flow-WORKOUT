@@ -1442,6 +1442,127 @@ app.post('/delete-post', (req, res) => {
         });
     });
 });
+app.post('/edit-post', (req, res) => {
+    const postId = req.body.postId; // מזהה הפוסט
+    const updatedContent = req.body.content; // תוכן מעודכן
+    const username = req.session.username; // שם המשתמש מה-session
+
+    if (!username) {
+        return res.status(401).send('Unauthorized. Please log in.');
+    }
+
+    // בדיקת בעלות על הפוסט
+    const checkOwnershipQuery = 'SELECT username FROM posts WHERE id = ?';
+    connection.query(checkOwnershipQuery, [postId], (err, results) => {
+        if (err) {
+            console.error('Error checking post ownership:', err);
+            return res.status(500).send('Error verifying post ownership.');
+        }
+
+        if (results.length === 0) {
+            return res.status(404).send('Post not found.');
+        }
+
+        const postOwner = results[0].username;
+
+        if (postOwner !== username) {
+            console.error('User does not have permission to edit this post.');
+            return res.status(403).send(`
+                <html>
+                    <head>
+                        <title>Permission Denied</title>
+                        <style>
+                            body {
+                                font-family: Arial, sans-serif;
+                                text-align: center;
+                                margin: 50px;
+                            }
+                            .back-button {
+                                display: inline-block;
+                                margin-top: 20px;
+                                padding: 10px 20px;
+                                font-size: 16px;
+                                color: white;
+                                background-color: #4CAF50;
+                                border: none;
+                                border-radius: 5px;
+                                text-decoration: none;
+                                text-align: center;
+                                cursor: pointer;
+                            }
+                            .back-button:hover {
+                                background-color: #45a049;
+                            }
+                        </style>
+                    </head>
+                    <body>
+                        <h1>Permission Denied</h1>
+                        <p>You are not allowed to edit this post.</p>
+                        <button onclick="window.history.back()" class="back-button">Go Back</button>
+                    </body>
+                </html>
+            `);
+        }
+
+        // עדכון הפוסט במסד הנתונים
+        const updateQuery = 'UPDATE posts SET content = ? WHERE id = ?';
+        connection.query(updateQuery, [updatedContent, postId], (err) => {
+            if (err) {
+                console.error('Error updating post:', err);
+                return res.status(500).send('Error updating post.');
+            }
+
+            console.log(`Post with ID ${postId} updated by user ${username}.`);
+
+            // שליפת הפוסטים והתגובות המעודכנים
+            const postsQuery = `
+                SELECT 
+                    p.id AS postId, p.username AS postUsername, p.title, p.content, p.created_at AS postCreatedAt,
+                    r.id AS replyId, r.post_id AS replyPostId, r.reply_text, r.username AS replyUsername, r.created_at AS replyCreatedAt
+                FROM posts p
+                LEFT JOIN post_replies r ON p.id = r.post_id
+                ORDER BY p.created_at DESC, r.created_at ASC
+            `;
+
+            connection.query(postsQuery, (err, results) => {
+                if (err) {
+                    console.error('Error fetching updated posts:', err);
+                    return res.status(500).send('Error fetching updated posts.');
+                }
+
+                // קיבוץ הפוסטים והתגובות
+                const posts = [];
+                const postMap = {};
+
+                results.forEach(row => {
+                    if (!postMap[row.postId]) {
+                        postMap[row.postId] = {
+                            id: row.postId,
+                            username: row.postUsername,
+                            title: row.title,
+                            content: row.content,
+                            created_at: row.postCreatedAt,
+                            replies: []
+                        };
+                        posts.push(postMap[row.postId]);
+                    }
+
+                    if (row.replyId) {
+                        postMap[row.postId].replies.push({
+                            id: row.replyId,
+                            reply_text: row.reply_text,
+                            username: row.replyUsername,
+                            created_at: row.replyCreatedAt
+                        });
+                    }
+                });
+
+                // הצגת עמוד הפוסטים המעודכן
+                res.render('posts.ejs', { posts, username });
+            });
+        });
+    });
+});
 
 
 
