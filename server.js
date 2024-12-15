@@ -972,61 +972,103 @@ app.post('/add-post', (req, res) => {
     });
 });
 
-
 app.get('/view-posts', (req, res) => {
-    const query = 'SELECT * FROM posts';
-  
+    const query = `
+        SELECT 
+            p.id AS postId, p.username AS postUsername, p.title, p.content, p.created_at AS postCreatedAt,
+            r.id AS replyId, r.reply_text, r.username AS replyUsername, r.created_at AS replyCreatedAt
+        FROM posts p
+        LEFT JOIN post_replies r ON p.id = r.post_id
+        ORDER BY p.created_at DESC, r.created_at ASC
+    `;
+
     connection.query(query, (err, results) => {
-      if (err) {
-        console.error('Error fetching posts:', err);
-        return res.status(500).send('Error fetching posts from the database');
-      }
-  
-      const postsHtml = results.map(post => `
-        <div>
-          <h3>${post.title}</h3>
-          <p><strong>${post.username}</strong></p>
-          <p>${post.content}</p>
-          <small>Posted on: ${new Date(post.created_at).toLocaleString()}</small>
-        </div>
-        <hr>
-      `).join('');
-  
-      res.send(`
-        <html>
-          <head>
-            <title>Workout Blog Posts</title>
-            <style>
-              body { font-family: Arial, sans-serif; margin: 20px; }
-              h3 { color: #ff4d4d; }
-              hr { margin: 20px 0; }
-              .back-button {
-                display: inline-block;
-                margin-top: 20px;
-                padding: 10px 20px;
-                font-size: 16px;
-                color: white;
-                background-color: #4CAF50;
-                border: none;
-                border-radius: 5px;
-                text-decoration: none;
-                text-align: center;
-                cursor: pointer;
-              }
-              .back-button:hover {
-                background-color: #45a049;
-              }
-            </style>
-          </head>
-          <body>
-            <h1>All Blog Posts</h1>
-            ${postsHtml}
-            <a href="/index.html" class="back-button">Back to Home</a>
-          </body>
-        </html>
-      `);
+        if (err) {
+            console.error('Error fetching posts and replies:', err);
+            return res.status(500).send('Error fetching posts from the database');
+        }
+
+        // Group posts with their replies
+        const postMap = {};
+        results.forEach(row => {
+            if (!postMap[row.postId]) {
+                postMap[row.postId] = {
+                    username: row.postUsername,
+                    title: row.title,
+                    content: row.content,
+                    createdAt: row.postCreatedAt,
+                    replies: []
+                };
+            }
+
+            if (row.replyId) {
+                postMap[row.postId].replies.push({
+                    replyText: row.reply_text,
+                    username: row.replyUsername,
+                    createdAt: row.replyCreatedAt
+                });
+            }
+        });
+
+        const postsHtml = Object.values(postMap).map(post => `
+            <div>
+                <h3>${post.title}</h3>
+                <p>By: <strong>${post.username}</strong></p>
+                <p>${post.content}</p>
+                <small>Posted on: ${new Date(post.createdAt).toLocaleString()}</small>
+                ${post.replies.length > 0 ? `
+                    <div style="margin-left: 20px; border-left: 2px solid #ddd; padding-left: 10px;">
+                        <h4>Replies:</h4>
+                        ${post.replies.map(reply => `
+                            <div>
+                                <strong>${reply.username}</strong> replied:
+                                <p>${reply.replyText}</p>
+                                <small>Submitted on: ${new Date(reply.createdAt).toLocaleString()}</small>
+                            </div>
+                        `).join('')}
+                    </div>
+                ` : '<p>No replies yet.</p>'}
+            </div>
+            <hr>
+        `).join('');
+
+        res.send(`
+            <html>
+                <head>
+                    <title>User Posts</title>
+                    <style>
+                        body { font-family: Arial, sans-serif; margin: 20px; }
+                        h3 { color: #007bff; }
+                        hr { margin: 20px 0; }
+                        .back-button {
+                            display: inline-block;
+                            margin-top: 20px;
+                            padding: 10px 20px;
+                            font-size: 16px;
+                            color: white;
+                            background-color: #4CAF50;
+                            border: none;
+                            border-radius: 5px;
+                            text-decoration: none;
+                            text-align: center;
+                            cursor: pointer;
+                        }
+                        .back-button:hover {
+                            background-color: #45a049;
+                        }
+                        .replies { margin-left: 20px; }
+                    </style>
+                </head>
+                <body>
+                    <h1>All Posts</h1>
+                    ${postsHtml}
+                    <a href="/index.html" class="back-button">Back to Home</a>
+                </body>
+            </html>
+        `);
     });
-  });
+});
+
 
   app.post('/add-reply/:postId', (req, res) => {
     if (!req.session.username) {
