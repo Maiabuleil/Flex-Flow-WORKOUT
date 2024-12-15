@@ -115,7 +115,34 @@
                                 </button>
                             </form>
                                 
-                                
+                            <button 
+                            onclick="toggleEditReplyForm('<%= reply.id %>')" 
+                            style="background: blue; color: white; border: none; padding: 5px 10px; cursor: pointer; border-radius: 5px;">
+                            Edit
+                        </button>
+                        
+                        <!-- טופס לעריכה -->
+                        <form 
+                            id="edit-reply-form-<%= reply.id %>" 
+                            style="display: none; margin-top: 10px;" 
+                            method="POST" 
+                            action="/edit-replys">
+                            <!-- שדה לעריכת התגובה -->
+                            <textarea 
+                                name="replyText" 
+                                rows="3" 
+                                style="width: 100%; border-radius: 5px; padding: 10px; font-size: 14px;"><%= reply.reply_text %></textarea>
+                            
+                            <!-- מזהה התגובה כערך מוסתר -->
+                            <input type="hidden" name="replyId" value="<%= reply.id %>">
+                            
+                            <!-- כפתור שמירה -->
+                            <button 
+                                type="submit" 
+                                style="margin-top: 10px; background: green; color: white; border: none; padding: 5px 10px; cursor: pointer; border-radius: 5px;">
+                                Save Changes
+                            </button>
+                        </form> 
                             
                         </li>
                     <% }); %>
@@ -156,5 +183,13 @@
         });
     }
 </script> 
+
+<script>
+    // פונקציה לפתיחת/סגירת טופס העריכה
+    function toggleEditReplyForm(replyId) {
+        const form = document.getElementById(`edit-reply-form-${replyId}`);
+        form.style.display = form.style.display === 'none' ? 'block' : 'none';
+    }
+</script>
 </body>
 </html>
