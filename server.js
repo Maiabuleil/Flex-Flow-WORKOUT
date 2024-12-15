@@ -1315,6 +1315,133 @@ app.post('/edit-replys', (req, res) => {
     });
 });
 
+app.post('/delete-post', (req, res) => {
+    const postId = req.body.postId; // ID of the post to delete
+    const username = req.session.username; // Get username from the session
+
+    if (!username) {
+        return res.status(401).send('Unauthorized. Please log in.');
+    }
+
+    // Check ownership of the post
+    const checkOwnershipQuery = 'SELECT username FROM posts WHERE id = ?';
+    connection.query(checkOwnershipQuery, [postId], (err, results) => {
+        if (err) {
+            console.error('Error checking post ownership:', err);
+            return res.status(500).send('Error verifying post ownership.');
+        }
+
+        if (results.length === 0) {
+            return res.status(404).send('Post not found.');
+        }
+
+        const postOwner = results[0].username;
+
+        if (postOwner !== username) {
+            console.error('User does not have permission to delete this post.');
+            return res.status(403).send(`
+                <html>
+                    <head>
+                        <title>Permission Denied</title>
+                        <style>
+                            body {
+                                font-family: Arial, sans-serif;
+                                text-align: center;
+                                margin: 50px;
+                            }
+                            .back-button {
+                                display: inline-block;
+                                margin-top: 20px;
+                                padding: 10px 20px;
+                                font-size: 16px;
+                                color: white;
+                                background-color: #4CAF50;
+                                border: none;
+                                border-radius: 5px;
+                                text-decoration: none;
+                                text-align: center;
+                                cursor: pointer;
+                            }
+                            .back-button:hover {
+                                background-color: #45a049;
+                            }
+                        </style>
+                    </head>
+                    <body>
+                        <h1>Permission Denied</h1>
+                        <p>You are not allowed to delete this post.</p>
+                        <button onclick="window.history.back()" class="back-button">Go Back</button>
+                    </body>
+                </html>
+            `);
+        }
+
+        // Delete associated replies
+        connection.query('DELETE FROM post_replies WHERE post_id = ?', [postId], (err) => {
+            if (err) {
+                console.error('Error deleting replies:', err);
+                return res.status(500).send('Error deleting replies.');
+            }
+
+            // Delete the post itself
+            connection.query('DELETE FROM posts WHERE id = ?', [postId], (err) => {
+                if (err) {
+                    console.error('Error deleting post:', err);
+                    return res.status(500).send('Error deleting post.');
+                }
+
+                console.log(`Post with ID ${postId} deleted by user ${username}.`);
+
+                // Fetch updated posts and replies
+                const postsQuery = `
+                    SELECT 
+                        p.id AS postId, p.username AS postUsername, p.title, p.content, p.created_at AS postCreatedAt,
+                        r.id AS replyId, r.post_id AS replyPostId, r.reply_text, r.username AS replyUsername, r.created_at AS replyCreatedAt
+                    FROM posts p
+                    LEFT JOIN post_replies r ON p.id = r.post_id
+                    ORDER BY p.created_at DESC, r.created_at ASC
+                `;
+
+                connection.query(postsQuery, (err, results) => {
+                    if (err) {
+                        console.error('Error fetching updated posts:', err);
+                        return res.status(500).send('Error fetching updated posts.');
+                    }
+
+                    // Group posts and their replies
+                    const posts = [];
+                    const postMap = {};
+
+                    results.forEach(row => {
+                        if (!postMap[row.postId]) {
+                            postMap[row.postId] = {
+                                id: row.postId,
+                                username: row.postUsername,
+                                title: row.title,
+                                content: row.content,
+                                created_at: row.postCreatedAt,
+                                replies: []
+                            };
+                            posts.push(postMap[row.postId]);
+                        }
+
+                        if (row.replyId) {
+                            postMap[row.postId].replies.push({
+                                id: row.replyId,
+                                reply_text: row.reply_text,
+                                username: row.replyUsername,
+                                created_at: row.replyCreatedAt
+                            });
+                        }
+                    });
+
+                    // Render the updated posts page
+                    res.render('posts.ejs', { posts, username });
+                });
+            });
+        });
+    });
+});
 
 
 
