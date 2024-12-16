@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trainings</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: #f4f4f4;
+            color: #333;
+        }
+
+        header {
+            background: #333;
+            color: #fff;
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        header h1 {
+            margin: 0;
+        }
+
+        header nav a {
+            color: #fff;
+            text-decoration: none;
+            margin-left: 15px;
+        }
+
+        header nav a:hover {
+            text-decoration: underline;
+        }
+
+        main {
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+            background: #fff;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            border-radius: 5px;
+        }
+
+        h2 {
+            color: #444;
+            margin-bottom: 20px;
+        }
+
+        .training {
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #f9f9f9;
+        }
+
+        .training h3 {
+            margin: 0 0 10px 0;
+            color: #007BFF;
+        }
+
+        .training p {
+            margin: 5px 0;
+        }
+
+        .replies {
+            margin-top: 15px;
+            padding: 10px;
+            border-top: 1px solid #ddd;
+            background: #f4f4f4;
+        }
+
+        .replies li {
+            margin-bottom: 10px;
+            padding: 5px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .replies li:last-child {
+            border-bottom: none;
+        }
+
+        .replies span {
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Welcome, <%= username %>!</h1>
+        <nav>
+            <a href="/index1.html">Back to Home</a>
+        </nav>
+    </header>
+    
+    <main>
+        <section>
+            <h2>Trainings</h2>
+            <% if (trainings.length > 0) { %>
+                <% trainings.forEach(training => { %>
+                    <div class="training">
+                        <h3><%= training.username %></h3>
+                        <p><strong>Time:</strong> <%= training.training_time %></p>
+                        <p><strong>Workout Type:</strong> <%= training.workout_type %></p>
+                        <div class="replies">
+                            <p><strong>Replies:</strong></p>
+                            <% if (training.replies && training.replies.length > 0) { %>
+                                <ul>
+                                    <% training.replies.forEach(reply => { %>
+                                        <li>
+                                            <span><%= reply.username %>:</span> <%= reply.reply_text %>
+                                            <br><small><%= new Date(reply.created_at).toLocaleString() %></small>
+                                        </li>
+                                    <% }); %>
+                                </ul>
+                            <% } else { %>
+                                <p>No replies yet.</p>
+                            <% } %>
+                        </div>
+
+                        <!-- טופס להוספת תגובה לאימון זה -->
+                        <div class="reply-section">
+                            <!-- כפתור להצגת טופס תגובה -->
+                            <button onclick="toggleReplyForm('<%= training.id %>')" style="margin-top: 10px; padding: 10px; border-radius: 5px; background-color: #007bff; color: white; border: none; cursor: pointer;">
+                                Reply
+                            </button>
+                
+                            <!-- טופס תגובה -->
+                            <form id="reply-form-<%= training.id %>" style="display: none; margin-top: 10px;" method="POST" action="/replyt">
+                                <textarea 
+                                    name="reply" 
+                                    rows="3" 
+                                    style="width: 100%; border-radius: 5px; padding: 10px; border: 1px solid #ccc;" 
+                                    placeholder="Write your reply here..."></textarea>
+                                <input type="hidden" name="trainingId" value="<%= training.id %>">
+                                <button 
+                                    type="submit" 
+                                    style="margin-top: 10px; padding: 10px; border-radius: 5px; background-color: #28a745; color: white; border: none; cursor: pointer;">
+                                    Submit Reply
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                        
+                <% }); %>
+            <% } else { %>
+                <p>No trainings found.</p>
+            <% } %>
+        </section>
+    </main>
+    <script>
+        function toggleReplyForm(trainingId) {
+            const form = document.getElementById(`reply-form-${trainingId}`);
+            if (form.style.display === 'none' || form.style.display === '') {
+                form.style.display = 'block'; // מציג את הטופס
+            } else {
+                form.style.display = 'none'; // מסתיר את הטופס
+            }
+        }
+    </script>
+    
+</body>
+</html>
+     
