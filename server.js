@@ -1605,6 +1605,153 @@ app.post('/edit-post', (req, res) => {
         });
     });
 });
+app.get('/trainings', (req, res) => {
+    if (!req.session.username) {
+        return res.redirect('/'); // המשתמש לא מחובר, מחזירים אותו לדף ההתחברות
+    }
+
+    const query = `
+    SELECT 
+        t.id AS training_id, t.username AS training_username, t.training_time, t.workout_type,
+        f.feedback_id AS reply_id, f.training_id AS reply_training_id, f.reply AS reply_text, f.username AS reply_username, f.created_at AS reply_created_at
+    FROM trainings t
+    LEFT JOIN training_feedback f ON t.id = f.training_id
+    ORDER BY t.training_time DESC, f.created_at ASC
+`;
+
+    connection.query(query, (err, results) => {
+        if (err) {
+            console.error('Error retrieving trainings:', err);
+            return res.send('Error retrieving trainings');
+        }
+
+        const trainings = results.reduce((acc, row) => {
+            let training = acc.find(t => t.id === row.training_id);
+            if (!training) {
+                training = {
+                    id: row.training_id,
+                    username: row.training_username,
+                    training_time: row.training_time,
+                    workout_type: row.workout_type,
+                    replies: []
+                };
+                acc.push(training);
+            }
+            if (row.reply_id) {
+                training.replies.push({
+                    id: row.reply_id,
+                    training_id: row.reply_training_id,
+                    username: row.reply_username,
+                    reply_text: row.reply_text,
+                    created_at: row.reply_created_at
+                });
+            }
+            return acc;
+        }, []);
+
+        res.render('trainings.ejs', { trainings, username: req.session.username });
+    });
+});
+
+app.post('/add-training', (req, res) => {
+    if (!req.session.username) {
+        return res.status(401).send('Unauthorized: Please log in first.');
+    }
+
+    const { training_time, workout_type } = req.body;
+
+    // בדיקת המשתמש המחובר
+    const query = 'SELECT id FROM project WHERE username = ?';
+    connection.query(query, [req.session.username], (err, results) => {
+        if (err) {
+            console.error('Error finding user:', err);
+            return res.send('Error finding user');
+        }
+
+        if (results.length > 0) {
+            const userId = results[0].id;
+
+            // הוספת אימון
+            const insertPostQuery = 'INSERT INTO trainings (username, training_time, workout_type) VALUES (?, ?, ?)';
+            connection.query(insertPostQuery, [req.session.username, training_time, workout_type], (err, result) => {
+                if (err) {
+                    console.error('Error adding training:', err);
+                    return res.send('Error adding training');
+                }
+
+                res.redirect('/trainings'); // הפניה לדף האימונים
+            });
+        } else {
+            res.send('User not found');
+        }
+    });
+});
+
+app.post('/replyt', (req, res) => { 
+    const { trainingId, reply } = req.body; // שימוש ב-trainingId במקום feedbackId
+    const username = req.session.username;
+
+    // בדיקת כניסה למערכת
+    if (!username) {
+        return res.status(401).send('User not logged in.');
+    }
+
+    // הוספת תגובה לטבלת training_feedback
+    const insertReplyQuery = 'INSERT INTO training_feedback (training_id, reply, username, created_at) VALUES (?, ?, ?, NOW())';
+    connection.query(insertReplyQuery, [trainingId, reply, username], (err) => {
+        if (err) {
+            console.error('Error inserting reply:', err);
+            return res.status(500).send('Error saving reply.');
+        }
+
+        // שליפת האימונים והתגובות שלהם
+        const query = `
+        SELECT 
+            t.id AS training_id, t.username AS training_username, t.training_time, t.workout_type,
+            f.feedback_id AS reply_id, f.training_id AS reply_training_id, f.reply AS reply_text, f.username AS reply_username, f.created_at AS reply_created_at
+        FROM trainings t
+        LEFT JOIN training_feedback f ON t.id = f.training_id
+        ORDER BY t.training_time DESC, f.created_at ASC
+    `;
+    
+        connection.query(query, (err, results) => {
+            if (err) {
+                console.error('Error retrieving trainings:', err);
+                return res.send('Error retrieving trainings');
+            }
+    
+            const trainings = results.reduce((acc, row) => {
+                let training = acc.find(t => t.id === row.training_id);
+                if (!training) {
+                    training = {
+                        id: row.training_id,
+                        username: row.training_username,
+                        training_time: row.training_time,
+                        workout_type: row.workout_type,
+                        replies: []
+                    };
+                    acc.push(training);
+                }
+                if (row.reply_id) {
+                    training.replies.push({
+                        id: row.reply_id,
+                        training_id: row.reply_training_id,
+                        username: row.reply_username,
+                        reply_text: row.reply_text,
+                        created_at: row.reply_created_at
+                    });
+                }
+                return acc;
+            }, []);
+    
+            res.render('trainings.ejs', { trainings, username: req.session.username });
+        });
+    });
+    
+});
+
+
+
 
 
 
@@ -1633,7 +1780,7 @@ app.get('/get-username', (req, res) => {
 });
   
 app.post('/contact1', (req, res) => {
-    const { name, email, phone } = req.body;
+    const { name, email, phone } = req.body;  
 
     // Insert data into the contact table
     const sql = 'INSERT INTO contact (name, email, phone) VALUES (?, ?, ?)';
