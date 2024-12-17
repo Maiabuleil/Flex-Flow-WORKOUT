@@ -1750,7 +1750,261 @@ app.post('/replyt', (req, res) => {
     
 });
 
+app.post('/delete-replyt', (req, res) => {
+    console.log('Request body:', req.body); // Debugging data
+    const { replyId } = req.body;
 
+    if (!replyId) {
+        console.error('Reply ID is missing.');
+        return res.status(400).send('Reply ID is required.');
+    }
+
+    const username = req.session.username;
+
+    if (!username) {
+        console.error('User not logged in.');
+        return res.status(401).send('Unauthorized.');
+    }
+
+    // Check ownership of the reply before deletion
+    const selectQuery = 'SELECT username FROM training_feedback WHERE feedback_id = ?';
+      connection.query(selectQuery, [replyId], (err, results) => {
+    if (err) {
+        console.error('Error checking reply ownership:', err);
+        return res.status(500).send('Error checking reply ownership.');
+    }
+
+        if (results.length === 0) {
+            console.error('Reply not found.');
+            return res.status(404).send('Reply not found.');
+        }
+
+        const replyOwner = results[0].username;
+
+        if (replyOwner !== username) {
+            console.error('User does not have permission to delete this reply.');
+            return res.status(403).send(`
+                <html>
+                    <head>
+                        <title>Permission Denied</title>
+                        <style>
+                            body {
+                                font-family: Arial, sans-serif;
+                                text-align: center;
+                                margin: 50px;
+                            }
+                            .back-button {
+                                display: inline-block;
+                                margin-top: 20px;
+                                padding: 10px 20px;
+                                font-size: 16px;
+                                color: white;
+                                background-color: #4CAF50;
+                                border: none;
+                                border-radius: 5px;
+                                text-decoration: none;
+                                text-align: center;
+                                cursor: pointer;
+                            }
+                            .back-button:hover {
+                                background-color: #45a049;
+                            }
+                        </style>
+                    </head>
+                    <body>
+                        <h1>Permission Denied</h1>
+                        <p>You do not have permission to delete this reply.</p>
+                        <button onclick="window.history.back()" class="back-button">Go Back</button>
+                    </body>
+                </html>
+            `);
+        }
+
+        // Delete the reply
+        const deleteQuery = 'DELETE FROM training_feedback WHERE feedback_id = ?';
+        connection.query(deleteQuery, [replyId], (err) => {
+            if (err) {
+                console.error('Error deleting reply:', err);
+                return res.status(500).send('Error deleting reply.');
+            }
+
+            console.log(`Reply with ID ${replyId} deleted by user ${username}.`);
+
+            // Fetch updated trainings and replies
+            const query = `
+            SELECT 
+                t.id AS training_id, 
+                t.username AS training_username, 
+                t.training_time, 
+                t.workout_type,
+                f.feedback_id AS reply_id, 
+                f.training_id AS reply_training_id, 
+                f.reply AS reply_text, 
+                f.username AS reply_username, 
+                f.created_at AS reply_created_at
+            FROM trainings t
+            LEFT JOIN training_feedback f ON t.id = f.training_id
+            ORDER BY t.training_time DESC, f.created_at ASC;
+        `;
+            connection.query(query, (err, results) => {
+                if (err) {
+                    console.error('Error fetching updated trainings:', err);
+                    return res.status(500).send('Error fetching updated trainings.');
+                }
+
+                // Group trainings and their replies
+                const trainings = results.reduce((acc, row) => {
+                    let training = acc.find(t => t.id === row.training_id);
+                    if (!training) {
+                        training = {
+                            id: row.training_id,
+                            username: row.training_username,
+                            training_time: row.training_time,
+                            workout_type: row.workout_type,
+                            replies: []
+                        };
+                        acc.push(training);
+                    }
+                    if (row.reply_id) {
+                        training.replies.push({
+                            id: row.reply_id,
+                            username: row.reply_username,
+                            reply_text: row.reply_text,
+                            created_at: row.reply_created_at
+                        });
+                    }
+                    return acc;
+                }, []);
+
+                // Render the updated trainings page
+                res.render('trainings.ejs', { trainings, username });
+            });
+        });
+    });
+});
+
+app.post('/edit-replyt', (req, res) => {
+    const { replyId, reply } = req.body;
+    const username = req.session.username;
+
+    // בדיקת כניסה למערכת
+    if (!username) {
+        return res.status(401).send("Unauthorized. Please log in.");
+    }
+
+    // בדיקת בעלות על התגובה
+    const checkOwnershipQuery = "SELECT username FROM training_feedback WHERE feedback_id = ?";
+    connection.query(checkOwnershipQuery, [replyId], (err, results) => {
+        if (err) {
+            console.error("Error checking reply ownership:", err);
+            return res.status(500).send("Error verifying reply ownership.");
+        }
+
+        if (results.length === 0) {
+            return res.status(404).send("Reply not found.");
+        }
+
+        const replyOwner = results[0].username;
+
+        if (replyOwner !== username) {
+            return res.status(403).send(`
+                <html>
+                    <head>
+                        <title>Permission Denied</title>
+                        <style>
+                            body {
+                                font-family: Arial, sans-serif;
+                                text-align: center;
+                                margin: 50px;
+                            }
+                            .back-button {
+                                display: inline-block;
+                                margin-top: 20px;
+                                padding: 10px 20px;
+                                font-size: 16px;
+                                color: white;
+                                background-color: #4CAF50;
+                                border: none;
+                                border-radius: 5px;
+                                text-decoration: none;
+                                text-align: center;
+                                cursor: pointer;
+                            }
+                            .back-button:hover {
+                                background-color: #45a049;
+                            }
+                        </style>
+                    </head>
+                    <body>
+                        <h1>Permission Denied</h1>
+                        <p>You do not have permission to edit this reply.</p>
+                        <button onclick="window.history.back()" class="back-button">Go Back</button>
+                    </body>
+                </html>
+            `);
+        }
+
+        // עדכון התגובה
+        const updateQuery = "UPDATE training_feedback SET reply = ? WHERE feedback_id = ?";
+        connection.query(updateQuery, [reply, replyId], (err) => {
+            if (err) {
+                console.error("Error updating reply:", err);
+                return res.status(500).send("Error updating reply.");
+            }
+
+            // שליפת האימונים והתגובות המעודכנות
+            const query = `
+                SELECT 
+                    t.id AS training_id, 
+                    t.username AS training_username, 
+                    t.training_time, 
+                    t.workout_type,
+                    f.feedback_id AS reply_id, 
+                    f.training_id AS reply_training_id, 
+                    f.reply AS reply_text, 
+                    f.username AS reply_username, 
+                    f.created_at AS reply_created_at
+                FROM trainings t
+                LEFT JOIN training_feedback f ON t.id = f.training_id
+                ORDER BY t.training_time DESC, f.created_at ASC;
+            `;
+
+            connection.query(query, (err, results) => {
+                if (err) {
+                    console.error("Error fetching updated trainings:", err);
+                    return res.status(500).send("Error fetching updated trainings.");
+                }
+
+                // קיבוץ אימונים והתגובות שלהם
+                const trainings = results.reduce((acc, row) => {
+                    let training = acc.find(t => t.id === row.training_id);
+                    if (!training) {
+                        training = {
+                            id: row.training_id,
+                            username: row.training_username,
+                            training_time: row.training_time,
+                            workout_type: row.workout_type,
+                            replies: []
+                        };
+                        acc.push(training);
+                    }
+                    if (row.reply_id) {
+                        training.replies.push({
+                            id: row.reply_id,
+                            username: row.reply_username,
+                            reply_text: row.reply_text,
+                            created_at: row.reply_created_at
+                        });
+                    }
+                    return acc;
+                }, []);
+
+                // הצגת העמוד המעודכן
+                res.render('trainings.ejs', { trainings, username });
+            });
+        });
+    });
+});
 
 
 
