@@ -115,13 +115,41 @@
                                             <span><%= reply.username %>:</span> <%= reply.reply_text %>
                                             <br><small><%= new Date(reply.created_at).toLocaleString() %></small>
                                         </li>
+                                        <form action="/delete-replyt" method="POST" style="display: inline;">
+                                            <input type="hidden" name="replyId" value="<%= reply.id %>">
+                                            <button 
+                                                type="submit" 
+                                                style="margin-top: 10px; background-color: red; color: white; border: none; padding: 10px; border-radius: 5px; cursor: pointer;">
+                                                Delete Reply
+                                            </button>
+                                        </form>
+                                        <button onclick="toggleEditReplyForm('<%= reply.id %>')" 
+                                            style="background: blue; color: white; border: none; padding: 8px 15px; cursor: pointer; border-radius: 5px;">
+                                            Edit
+                                        </button>
+                                        
+                                        <!-- טופס לעריכת תגובה -->
+                                        <form id="edit-reply-form-<%= reply.id %>" style="display: none; margin-top: 10px;" method="POST" action="/edit-replyt">
+                                            <textarea 
+                                                name="reply" 
+                                                rows="3" 
+                                                style="width: 100%; border-radius: 5px; padding: 10px; border: 1px solid #ccc;" 
+                                                placeholder="Edit your reply here..."><%= reply.reply_text %></textarea>
+                                            <input type="hidden" name="replyId" value="<%= reply.id %>">
+                                            <button 
+                                                type="submit" 
+                                                style="margin-top: 10px; padding: 8px 15px; background: green; color: white; border: none; border-radius: 5px; cursor: pointer;">
+                                                Save Changes
+                                            </button>
+                                        </form>
                                     <% }); %>
                                 </ul>
                             <% } else { %>
                                 <p>No replies yet.</p>
                             <% } %>
                         </div>
-
+                      
+                        
                         <!-- טופס להוספת תגובה לאימון זה -->
                         <div class="reply-section">
                             <!-- כפתור להצגת טופס תגובה -->
@@ -162,7 +190,17 @@
             }
         }
     </script>
-    
+    <script>
+        // פונקציה להצגת/הסתרת טופס עריכה
+        function toggleEditReplyForm(replyId) {
+            const form = document.getElementById(`edit-reply-form-${replyId}`);
+            if (form.style.display === 'none' || form.style.display === '') {
+                form.style.display = 'block'; // מציג את הטופס
+            } else {
+                form.style.display = 'none'; // מסתיר את הטופס
+            }
+        }
+    </script>
 </body>
 </html>
      
