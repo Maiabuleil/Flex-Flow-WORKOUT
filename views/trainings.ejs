@@ -6,88 +6,87 @@
     <title>Trainings</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
             margin: 0;
-            padding: 0;
-            background: #f4f4f4;
+            font-family: Arial, sans-serif;
+            background-color: #f9f9f9;
             color: #333;
         }
 
         header {
-            background: #333;
-            color: #fff;
-            padding: 10px 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+            background-color: #007bff;
+            color: white;
+            padding: 15px;
+            text-align: center;
         }
 
-        header h1 {
-            margin: 0;
-        }
-
-        header nav a {
-            color: #fff;
+        nav a {
+            color: white;
             text-decoration: none;
-            margin-left: 15px;
-        }
-
-        header nav a:hover {
-            text-decoration: underline;
+            font-weight: bold;
         }
 
         main {
-            max-width: 800px;
-            margin: 20px auto;
             padding: 20px;
-            background: #fff;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-            border-radius: 5px;
         }
 
         h2 {
-            color: #444;
-            margin-bottom: 20px;
+            text-align: center;
+            color: #333;
         }
 
         .training {
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            margin-bottom: 20px;
-            padding: 15px;
-            background: #f9f9f9;
+            background: white;
+            margin: 20px auto;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            width: 90%;
+            min-height: 100x; /* גובה קבוע */
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            text-align: center;
         }
 
         .training h3 {
-            margin: 0 0 10px 0;
-            color: #007BFF;
+            color: #007bff;
+            margin: 10px 0;
         }
 
         .training p {
-            margin: 5px 0;
+            margin: 8px 0;
         }
 
-        .replies {
-            margin-top: 15px;
-            padding: 10px;
-            border-top: 1px solid #ddd;
-            background: #f4f4f4;
+        .separator {
+            border: none;
+            height: 4px;
+            background: linear-gradient(to right, #007bff, #f9f9f9);
+            margin: 20px auto;
+            width: 90%;
         }
 
-        .replies li {
-            margin-bottom: 10px;
-            padding: 5px;
-            border-bottom: 1px solid #ddd;
-        }
-
-        .replies li:last-child {
-            border-bottom: none;
-        }
-
-        .replies span {
+        button {
+            padding: 8px 12px;
+            border: none;
+            border-radius: 5px;
+            color: white;
+            cursor: pointer;
             font-weight: bold;
         }
+
+        button.reply-btn { background-color: #007bff; }
+        button.delete-btn { background-color: #dc3545; }
+        button.save-btn { background-color: #28a745; }
+
+        textarea {
+            width: 90%;
+            padding: 10px;
+            margin-top: 10px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
     </style>
+    
 </head>
 <body>
     <header>
@@ -96,8 +95,7 @@
             <a href="/index1.html">Back to Home</a>
         </nav>
     </header>
-    
-    <main>
+ 
         <section>
             <h2>Trainings</h2>
             <% if (trainings.length > 0) { %>
@@ -114,7 +112,8 @@
                                         <li>
                                             <span><%= reply.username %>:</span> <%= reply.reply_text %>
                                             <br><small><%= new Date(reply.created_at).toLocaleString() %></small>
-                                        </li>
+                                            
+                                        
                                         <form action="/delete-replyt" method="POST" style="display: inline;">
                                             <input type="hidden" name="replyId" value="<%= reply.id %>">
                                             <button 
@@ -142,6 +141,7 @@
                                                 Save Changes
                                             </button>
                                         </form>
+                                    </li>
                                     <% }); %>
                                 </ul>
                             <% } else { %>
@@ -172,14 +172,35 @@
                                 </button>
                             </form>
                         </div>
-                    </div>
+                        <div class="delete-section" style="margin-top: 10px;">
+                            <!-- טופס למחיקת משוב -->
+                            <div class="delete-section" style="margin-top: 10px;">
+                                <form method="POST" action="/delete-trainings" onsubmit="return confirm('Are you sure you want to delete this workout?');">
+                                    <input type="hidden" name="trainingId" value="<%= training.id %>">
+                                    <button 
+                                        type="submit" 
+                                        class="delete-button" 
+                                        style="
+                                            background-color: #dc3545; 
+                                            color: white; 
+                                            padding: 8px 15px; 
+                                            border: none; 
+                                            border-radius: 5px; 
+                                            cursor: pointer;
+                                            font-size: 14px;">
+                                        Delete Workout
+                                    </button>
+                                </form>
+                            </div>
+                    
+
                         
                 <% }); %>
             <% } else { %>
                 <p>No trainings found.</p>
             <% } %>
         </section>
-    </main>
+    
     <script>
         function toggleReplyForm(trainingId) {
             const form = document.getElementById(`reply-form-${trainingId}`);
