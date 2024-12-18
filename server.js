@@ -2006,6 +2006,125 @@ app.post('/edit-replyt', (req, res) => {
     });
 });
 
+app.post('/delete-trainings', (req, res) => {
+    const trainingId = req.body.trainingId; // ID of the training to delete
+    const username = req.session.username; // Get username from the session
+
+    if (!username) {
+        return res.status(401).send('Unauthorized. Please log in.');
+    }
+
+    // Check ownership of the training
+    const checkOwnershipQuery = 'SELECT username FROM trainings WHERE id = ?';
+    connection.query(checkOwnershipQuery, [trainingId], (err, results) => {
+        if (err) {
+            console.error('Error checking training ownership:', err);
+            return res.status(500).send('Error verifying training ownership.');
+        }
+
+        if (results.length === 0) {
+            return res.status(404).send('Training not found.');
+        }
+
+        const trainingOwner = results[0].username;
+
+        if (trainingOwner !== username) {
+            return res.status(403).send(`
+                <html>
+                    <head>
+                        <title>Permission Denied</title>
+                        <style>
+                            body { font-family: Arial, sans-serif; text-align: center; margin: 50px; }
+                            .back-button {
+                                display: inline-block; margin-top: 20px; padding: 10px 20px;
+                                font-size: 16px; color: white; background-color: #4CAF50;
+                                border: none; border-radius: 5px; cursor: pointer;
+                            }
+                            .back-button:hover { background-color: #45a049; }
+                        </style>
+                    </head>
+                    <body>
+                        <h1>Permission Denied</h1>
+                        <p>You are not allowed to delete this training.</p>
+                        <button onclick="window.history.back()" class="back-button">Go Back</button>
+                    </body>
+                </html>
+            `);
+        }
+
+        // Delete related feedbacks first
+        const deleteFeedbacksQuery = 'DELETE FROM training_feedback WHERE training_id = ?';
+        connection.query(deleteFeedbacksQuery, [trainingId], (err) => {
+            if (err) {
+                console.error('Error deleting feedbacks:', err);
+                return res.status(500).send('Error deleting related feedbacks.');
+            }
+
+            // Delete the training itself
+            const deleteTrainingQuery = 'DELETE FROM trainings WHERE id = ?';
+            connection.query(deleteTrainingQuery, [trainingId], (err) => {
+                if (err) {
+                    console.error('Error deleting training:', err);
+                    return res.status(500).send('Error deleting training.');
+                }
+
+                console.log(`Training with ID ${trainingId} deleted by user ${username}.`);
+
+                // Fetch updated trainings
+                const fetchUpdatedTrainingsQuery = `
+                    SELECT 
+                        t.id AS training_id, 
+                        t.username AS training_username, 
+                        t.training_time, 
+                        t.workout_type,
+                        f.feedback_id AS reply_id, 
+                        f.training_id AS reply_training_id, 
+                        f.reply AS reply_text, 
+                        f.username AS reply_username, 
+                        f.created_at AS reply_created_at
+                    FROM trainings t
+                    LEFT JOIN training_feedback f ON t.id = f.training_id
+                    ORDER BY t.training_time DESC, f.created_at ASC;
+                `;
+
+                connection.query(fetchUpdatedTrainingsQuery, (err, results) => {
+                    if (err) {
+                        console.error('Error fetching updated trainings:', err);
+                        return res.status(500).send('Error fetching updated trainings.');
+                    }
+
+                    // Group trainings and their replies
+                    const trainings = results.reduce((acc, row) => {
+                        let training = acc.find(t => t.id === row.training_id);
+                        if (!training) {
+                            training = {
+                                id: row.training_id,
+                                username: row.training_username,
+                                training_time: row.training_time,
+                                workout_type: row.workout_type,
+                                replies: []
+                            };
+                            acc.push(training);
+                        }
+                        if (row.reply_id) {
+                            training.replies.push({
+                                id: row.reply_id,
+                                username: row.reply_username,
+                                reply_text: row.reply_text,
+                                created_at: row.reply_created_at
+                            });
+                        }
+                        return acc;
+                    }, []);
+
+                    // Render the updated trainings page
+                    res.render('trainings.ejs', { trainings, username });
+                });
+            });
+        });
+    });
+});
+
 
 
 
