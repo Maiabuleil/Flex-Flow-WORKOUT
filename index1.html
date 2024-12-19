@@ -248,17 +248,59 @@
             <p>Register for your training session</p>
         </div>
 
-        <form id="trainingForm" action="/training" method="POST"><!-- ודא שה- action נכון -->
-            <label for="username">Username:</label>
-            <input type="text" id="username" name="username" required><br><br>
+        <form id="trainingForm" action="/add-training" method="POST"><!-- ודא שה- action נכון -->
+          <label for="workoutType">Workout Type:</label>
+          <select id="workout_type" name="workout_type" required>
+              <option value="" disabled selected>Choose your workout type</option>
+              <option value="cardio">Cardio</option>
+              <option value="strength">Strength Training</option>
+              <option value="yoga">Yoga</option>
+              <option value="pilates">Pilates</option>
+              <option value="crossfit">CrossFit</option>
+              <option value="hiit">HIIT</option>
+              <option value="zumba">Zumba</option>
+              <option value="bodyweight">Bodyweight Training</option>
+              <option value="boxing">Boxing</option>
+              <option value="kickboxing">Kickboxing</option>
+              <o
+          </select>
 
-            <label for="time">Training Time:</label>
-            <input type="datetime-local" id="time" name="time" required><br><br>
+          <label forption value="aerobics">Aerobics</option>
+              <option value="dance">Dance Fitness</option>
+              <option value="martialarts">Martial Arts</option>="training_time">Training Time:</label>
+         <input type="datetime-local" id="training_time" name="training_time" required>
 
-            <button type="submit">Save</button>
+            
+         <button type="submit">Add Training</button>
         </form>
     </div>
+    <div class="view-posts">
+      <button class="view-button" onclick="window.location.href='/view-training-feedback';">view training</button>
+    </div>
+    
+
 </section>
+<style>
+  .view-button {
+      background-color: #4CAF50; /* צבע ירוק */
+      color: white; /* צבע טקסט */
+      padding: 10px 20px; /* ריווח פנימי */
+      border: none; /* בלי מסגרת */
+      border-radius: 5px; /* פינות מעוגלות */
+      font-size: 16px; /* גודל טקסט */
+      cursor: pointer; /* שינוי הסמן */
+      transition: background-color 0.3s ease; /* אנימציה לשינוי צבע */
+  }
+
+  .view-button:hover {
+      background-color: #45a049; /* צבע כהה יותר */
+  }
+
+  .view-button:active {
+      background-color: #3e8e41; /* צבע כהה עוד יותר בעת לחיצה */
+      transform: scale(0.98); /* אפקט לחיצה */
+  }
+</style>
 
     
   
@@ -276,7 +318,7 @@
       }
   
       .section-title p {
-        color: #fff; /* White for the subtitle */
+        color: #e00000; /* White for the subtitle */
         text-align: center;
       }
   
@@ -285,7 +327,7 @@
       }
   
       label {
-        color: #fff;
+        color: #dc0909;
         font-size: 16px;
       }
   
@@ -296,7 +338,7 @@
         border: 1px solid #ff0000; /* Red border */
         border-radius: 5px;
         background-color: #333; /* Dark background for inputs */
-        color: #fff;
+        color: #000000;
       }
   
       button[type="submit"] {
@@ -318,6 +360,18 @@
         text-align: center;
         margin-top: 20px;
       }
+         /* Select Box Styling */
+    select {
+        width: 100%;
+        padding: 12px;
+        font-size: 16px;
+        border: 1px solid #333;;
+        border-radius: 8px;
+        background: linear-gradient(90deg, #333,#333 );
+        box-shadow: 0 2px 4px rgba(255, 255, 255, 0.1);
+        outline: none;
+        transition: border-color 0.3s ease;
+    }
     </style>
   </section>
   
@@ -569,10 +623,21 @@
           <div class="input-group">
               <label for="workout">Workout Type</label>
               <select id="workout" name="workout">
-                  <option value="yoga">Yoga</option>
-                  <option value="cardio">Cardio</option>
-                  <option value="strength">Strength Training</option>
-                  <option value="hiit">HIIT</option>
+              
+                <option value="cardio">Cardio</option>
+                <option value="strength">Strength Training</option>
+                <option value="yoga">Yoga</option>
+                <option value="pilates">Pilates</option>
+                <option value="crossfit">CrossFit</option>
+                <option value="hiit">HIIT</option>
+                <option value="zumba">Zumba</option>
+                <option value="bodyweight">Bodyweight Training</option>
+                <option value="boxing">Boxing</option>
+                <option value="kickboxing">Kickboxing</option>
+                <option value="aerobics">Aerobics</option>
+                <option value="dance">Dance Fitness</option>
+                <option value="martialarts">Martial Arts</option>
+            </select>
               </select>
           </div>
           <div class="input-group">
