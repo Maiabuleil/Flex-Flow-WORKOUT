@@ -2255,6 +2255,106 @@ app.post('/edit-training', (req, res) => {
     });
 });
 
+app.get('/view-training-feedback', (req, res) => {
+    const query = `
+        SELECT 
+            t.id AS trainingId, 
+            t.username AS trainingUsername, 
+            t.training_time, 
+            t.workout_type,
+            tf.feedback_id AS replyId, 
+            tf.reply, 
+            tf.username AS replyUsername, 
+            tf.created_at AS replyCreatedAt
+        FROM trainings t
+        LEFT JOIN training_feedback tf ON t.id = tf.training_id
+        ORDER BY t.training_time DESC, tf.created_at ASC;
+    `;
+
+    connection.query(query, (err, results) => {
+        if (err) {
+            console.error('Error fetching training feedback and replies:', err);
+            return res.status(500).send('Error fetching training feedback from the database');
+        }
+
+        // קיבוץ האימונים עם התגובות
+        const trainingMap = {};
+        results.forEach(row => {
+            if (!trainingMap[row.trainingId]) {
+                trainingMap[row.trainingId] = {
+                    username: row.trainingUsername,
+                    trainingTime: row.training_time,
+                    workoutType: row.workout_type,
+                    replies: []
+                };
+            }
+
+            if (row.replyId) {
+                trainingMap[row.trainingId].replies.push({
+                    reply: row.reply,
+                    username: row.replyUsername,
+                    createdAt: row.replyCreatedAt
+                });
+            }
+        });
+
+        const trainingHtml = Object.values(trainingMap).map(training => `
+            <div>
+                <h3>${training.username}</h3>
+                <p><strong>Workout Type:</strong> ${training.workoutType}</p>
+                <p><strong>Time:</strong> ${new Date(training.trainingTime).toLocaleString()}</p>
+                ${training.replies.length > 0 ? `
+                    <div style="margin-left: 20px; border-left: 2px solid #ddd; padding-left: 10px;">
+                        <h4>Replies:</h4>
+                        ${training.replies.map(reply => `
+                            <div>
+                                <strong>${reply.username}</strong> replied:
+                                <p>${reply.reply}</p>
+                                <small>Submitted on: ${new Date(reply.createdAt).toLocaleString()}</small>
+                            </div>
+                        `).join('')}
+                    </div>
+                ` : '<p>No replies yet.</p>'}
+            </div>
+            <hr>
+        `).join('');
+
+        res.send(`
+            <html>
+                <head>
+                    <title>Training list </title>
+                    <style>
+                        body { font-family: Arial, sans-serif; margin: 20px; }
+                        h3 { color: #4CAF50; }
+                        hr { margin: 20px 0; }
+                        .back-button {
+                            display: inline-block;
+                            margin-top: 20px;
+                            padding: 10px 20px;
+                            font-size: 16px;
+                            color: white;
+                            background-color: #4CAF50;
+                            border: none;
+                            border-radius: 5px;
+                            text-decoration: none;
+                            text-align: center;
+                            cursor: pointer;
+                        }
+                        .back-button:hover {
+                            background-color: #45a049;
+                        }
+                        .replies { margin-left: 20px; }
+                    </style>
+                </head>
+                <body>
+                    <h1>Training list</h1>
+                    ${trainingHtml}
+                    <a href="/index1.html" class="back-button">Back to Home</a>
+                </body>
+            </html>
+        `);
+    });
+});
 
 
 
