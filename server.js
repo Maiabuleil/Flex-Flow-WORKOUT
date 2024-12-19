@@ -2124,7 +2124,136 @@ app.post('/delete-trainings', (req, res) => {
         });
     });
 });
+app.post('/edit-training', (req, res) => {
+    const { trainingId, workoutType, trainingTime } = req.body; // קבלת נתונים מהטופס
+    const username = req.session.username; // קבלת שם המשתמש מהסשן
 
+    // בדיקת כניסה
+    if (!username) {
+        return res.status(401).send('Unauthorized. Please log in.');
+    }
+
+    // בדיקה האם המשתמש הוא בעל האימון
+    const checkOwnershipQuery = 'SELECT username FROM trainings WHERE id = ?';
+    connection.query(checkOwnershipQuery, [trainingId], (err, results) => {
+        if (err) {
+            console.error('Error checking training ownership:', err);
+            return res.status(500).send('Error verifying training ownership.');
+        }
+
+        if (results.length === 0) {
+            return res.status(404).send('Training not found.');
+        }
+
+        const trainingOwner = results[0].username;
+
+        if (trainingOwner !== username) {
+            return res.status(403).send(`
+                <html>
+                    <head>
+                        <title>Permission Denied</title>
+                        <style>
+                            body {
+                                font-family: Arial, sans-serif;
+                                text-align: center;
+                                margin: 50px;
+                            }
+                            .back-button {
+                                display: inline-block;
+                                margin-top: 20px;
+                                padding: 10px 20px;
+                                font-size: 16px;
+                                color: white;
+                                background-color: #4CAF50;
+                                border: none;
+                                border-radius: 5px;
+                                text-decoration: none;
+                                text-align: center;
+                                cursor: pointer;
+                            }
+                            .back-button:hover {
+                                background-color: #45a049;
+                            }
+                        </style>
+                    </head>
+                    <body>
+                        <h1>Permission Denied</h1>
+                        <p>You are not allowed to edit this training.</p>
+                        <button onclick="window.history.back()" class="back-button">Go Back</button>
+                    </body>
+                </html>
+            `);
+        }
+
+        // עדכון פרטי האימון בטבלה
+        const updateQuery = `
+            UPDATE trainings 
+            SET workout_type = ?, training_time = ? 
+            WHERE id = ?
+        `;
+        connection.query(updateQuery, [workoutType, trainingTime, trainingId], (err) => {
+            if (err) {
+                console.error('Error updating training:', err);
+                return res.status(500).send('Error updating training.');
+            }
+
+            console.log(`Training with ID ${trainingId} updated by user ${username}.`);
+
+            // חזרה לעמוד האימונים
+            const fetchUpdatedTrainingsQuery = `
+                SELECT 
+                    t.id AS training_id, 
+                    t.username AS training_username, 
+                    t.training_time, 
+                    t.workout_type,
+                    tf.feedback_id AS reply_id, 
+                    tf.training_id AS reply_training_id, 
+                    tf.reply AS reply_text, 
+                    tf.username AS reply_username, 
+                    tf.created_at AS reply_created_at
+                FROM trainings t
+                LEFT JOIN training_feedback tf ON t.id = tf.training_id
+                ORDER BY t.training_time DESC, tf.created_at ASC;
+            `;
+
+            connection.query(fetchUpdatedTrainingsQuery, (err, results) => {
+                if (err) {
+                    console.error('Error fetching updated trainings:', err);
+                    return res.status(500).send('Error fetching updated trainings.');
+                }
+
+                // קיבוץ האימונים והתגובות שלהם
+                const trainings = [];
+                const trainingMap = {};
+
+                results.forEach(row => {
+                    if (!trainingMap[row.training_id]) {
+                        trainingMap[row.training_id] = {
+                            id: row.training_id,
+                            username: row.training_username,
+                            training_time: row.training_time,
+                            workout_type: row.workout_type,
+                            replies: []
+                        };
+                        trainings.push(trainingMap[row.training_id]);
+                    }
+
+                    if (row.reply_id) {
+                        trainingMap[row.training_id].replies.push({
+                            id: row.reply_id,
+                            reply: row.reply_text,
+                            username: row.reply_username,
+                            created_at: row.reply_created_at
+                        });
+                    }
+                });
+
+                // הצגת עמוד האימונים המעודכן
+                res.render('trainings.ejs', { trainings, username });
+            });
+        });
+    });
+});
 
 
 
