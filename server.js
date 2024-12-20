@@ -218,7 +218,7 @@ app.get('/feedbacks', (req, res) => {
                 });
             }
             return acc;
-        }, []);
+        }, []);  
 
         res.render('feedback.ejs', { feedbacks:results, username: req.session.username});
     });
@@ -883,6 +883,51 @@ app.get('/view-feedback', (req, res) => {
         `);
     });
 });
+app.get('/view-feedbacks', (req, res) => {
+    const feedbackQuery = `
+        SELECT f.id AS feedbackId, f.username AS feedbackUsername, f.comments, f.created_at AS feedbackCreatedAt,
+               r.id AS replyId, r.feedback_id AS replyFeedbackId, r.reply, r.username AS replyUsername, r.created_at AS replyCreatedAt
+        FROM feedback1 f
+        LEFT JOIN replies r ON f.id = r.feedback_id
+        ORDER BY f.created_at DESC, r.created_at ASC
+    `;
+
+    connection.query(feedbackQuery, (err, results) => {
+        if (err) {
+            console.error('Error fetching feedbacks and replies:', err);
+            return res.status(500).send('Error fetching feedbacks.');
+        }
+
+        // Group feedbacks and their replies
+        const feedbacks = [];
+        const feedbackMap = {};
+
+        results.forEach(row => {
+            if (!feedbackMap[row.feedbackId]) {
+                feedbackMap[row.feedbackId] = {
+                    id: row.feedbackId,
+                    username: row.feedbackUsername,
+                    comments: row.comments,
+                    created_at: row.feedbackCreatedAt,
+                    replies: []
+                };
+                feedbacks.push(feedbackMap[row.feedbackId]);
+            }
+
+            if (row.replyId) {
+                feedbackMap[row.feedbackId].replies.push({
+                    id: row.replyId,
+                    reply: row.reply,
+                    username: row.replyUsername,
+                    created_at: row.replyCreatedAt
+                });
+            }
+        });
+
+        res.render('feedback-view.ejs', { feedbacks, username: req.session.username });
+    });
+});
+
 
 
 
@@ -2353,7 +2398,7 @@ app.get('/view-training-feedback', (req, res) => {
                 </body>
             </html>
         `);
-    });
+    });       
 });
 
 
