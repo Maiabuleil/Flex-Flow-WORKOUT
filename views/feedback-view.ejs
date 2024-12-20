@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Feedback View</title>
+</head>
+<body>
+    <h1>Feedbacks</h1>
+    <ul>
+        <% feedbacks.forEach(feedback => { %>
+            <li>
+                <p><strong><%= feedback.username %>:</strong> <%= feedback.comments %></p>
+                <p><em>Posted on: <%= feedback.created_at %></em></p>
+                <ul>
+                    <% feedback.replies.forEach(reply => { %>
+                        <li>
+                            <strong><%= reply.username %>:</strong> <%= reply.reply %>
+                            <em>(<%= reply.created_at %>)</em>
+                            <button onclick="editReply('<%= reply.id %>')">Edit</button>
+                            <button onclick="deleteReply('<%= reply.id %>')">Delete</button>
+                        </li>
+                    <% }) %>
+                </ul>
+                <form action="/reply" method="POST">
+                    <input type="hidden" name="feedbackId" value="<%= feedback.id %>">
+                    <textarea name="reply" rows="2" required></textarea>
+                    <button type="submit">Reply</button>
+                </form>
+            </li>
+        <% }) %>
+    </ul>
+    <script>
+        function editReply(replyId) {
+            const newReply = prompt("Enter new reply text:");
+            if (newReply) {
+                fetch('/edit-reply', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ replyId, reply: newReply })
+                }).then(response => {
+                    if (response.ok) window.location.reload();
+                });
+            }
+        }
+
+        function deleteReply(replyId) {
+            if (confirm("Are you sure you want to delete this reply?")) {
+                fetch('/delete-reply', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ replyId })
+                }).then(response => {
+                    if (response.ok) window.location.reload();
+                });
+            }
+        }
+    </script>
+</body>
+</html>
