@@ -1,58 +1,194 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Feedback View</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>User Feedback</title>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+        background-color: #f9f9f9;
+        color: #333;
+    }
+    h1 {
+        text-align: center;
+        color: #444;
+        margin-top: 20px;
+    }
+    .feedback-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 20px;
+        justify-content: center;
+        margin: 20px auto;
+        max-width: 1200px;
+        padding: 10px;
+    }
+    .feedback-card {
+        border: 1px solid #ddd;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        max-width: 300px;
+        background: white;
+        text-align: left;
+        transition: transform 0.3s, box-shadow 0.3s;
+    }
+    .feedback-card:hover {
+        transform: scale(1.05);
+        box-shadow: 0 6px 10px rgba(0, 0, 0, 0.2);
+    }
+    .feedback-card h4 {
+        margin: 0 0 10px;
+        color: #007BFF;
+    }
+    .feedback-card p {
+        margin: 5px 0;
+    }
+    .feedback-card small {
+        display: block;
+        margin-top: 10px;
+        color: #888;
+    }
+    .replies {
+        margin-top: 10px;
+        border-top: 1px solid #ddd;
+        padding-top: 10px;
+    }
+    .replies p {
+        margin: 5px 0;
+    }
+    .reply-section {
+        margin-top: 10px;
+    }
+    textarea {
+        width: 100%;
+        border-radius: 5px;
+        border: 1px solid #ccc;
+        padding: 10px;
+        resize: none;
+    }
+    button {
+        background-color: #007BFF;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 14px;
+        transition: background-color 0.3s;
+    }
+    button:hover {
+        background-color: #0056b3;
+    }
+    .delete-button {
+        background-color: #dc3545;
+        margin-left: 10px;
+    }
+    .delete-button:hover {
+        background-color: #b02a37;
+    }
+    .back-home {
+        display: block;
+        margin: 20px auto;
+        text-align: center;
+    }
+</style>
 </head>
 <body>
-    <h1>Feedbacks</h1>
-    <ul>
-        <% feedbacks.forEach(feedback => { %>
-            <li>
-                <p><strong><%= feedback.username %>:</strong> <%= feedback.comments %></p>
-                <p><em>Posted on: <%= feedback.created_at %></em></p>
-                <ul>
-                    <% feedback.replies.forEach(reply => { %>
-                        <li>
-                            <strong><%= reply.username %>:</strong> <%= reply.reply %>
-                            <em>(<%= reply.created_at %>)</em>
-                            <button onclick="editReply('<%= reply.id %>')">Edit</button>
-                            <button onclick="deleteReply('<%= reply.id %>')">Delete</button>
-                        </li>
-                    <% }) %>
-                </ul>
-                <form action="/reply" method="POST">
-                    <input type="hidden" name="feedbackId" value="<%= feedback.id %>">
-                    <textarea name="reply" rows="2" required></textarea>
-                    <button type="submit">Reply</button>
-                </form>
-            </li>
-        <% }) %>
-    </ul>
+    <h1 style="text-align: center;">User Feedback</h1>
+    <div class="feedback-container">
+        <% feedbacks.forEach(function(feedback) { %>
+            <div class="feedback-card">
+                <h4>Submitted by: <%= feedback.username %></h4>
+                <p><strong>Rating:</strong> <%= feedback.rating %> / 5</p>
+                <p><%= feedback.comments %></p>
+                <small>Submitted on: <%= new Date(feedback.created_at).toLocaleString() %></small>
+            
+                <!-- Delete Feedback Button -->
+                <div class="delete-section">
+                    <form method="POST" action="/delete-feedback">
+                        <input type="hidden" name="feedbackId" value="<%= feedback.id %>">
+                        <button type="submit" class="delete-button">Delete Feedback</button>
+                    </form>
+                
+                <button onclick="toggleEditForm('<%= feedback.id %>')" class="edit-button">Edit Feedback</button>
+            </div>
+            
+            <!-- Edit Feedback Form -->
+            <form id="edit-form-<%= feedback.id %>" style="display: none; margin-top: 10px;" method="POST" action="/edit-feedback">
+                <textarea name="comments" rows="3" style="width: 100%; border-radius: 5px;"><%= feedback.comments %></textarea>
+                <input type="hidden" name="feedbackId" value="<%= feedback.id %>">
+                <button type="submit" style="margin-top: 10px;">Save Changes</button>
+            </form>
+                <!-- Display replies -->
+                <div class="replies">
+                    <% if (feedback.replies && feedback.replies.length > 0) { %>
+                        <% feedback.replies.forEach(function(reply) { %>
+                            <div>
+                                <p><strong>Reply by:</strong> <%= reply.username %></p>
+                                <p><strong>Reply:</strong> <%= reply.reply %></p>
+                                <small>Submitted on: <%= new Date(reply.created_at).toLocaleString() %></small>
+
+                                <!-- Edit Reply Button -->
+                                <button onclick="toggleEditReplyForm('<%= reply.id %>')">Edit Reply</button>
+                                <form id="edit-reply-form-<%= reply.id %>" style="display: none;" method="POST" action="/edit-reply">
+                                    <textarea name="reply" rows="3"><%= reply.reply %></textarea>
+                                    <input type="hidden" name="replyId" value="<%= reply.id %>">
+                                    <button type="submit">Save Changes</button>
+                                </form>
+
+                                <!-- Delete Reply Button -->
+                                <form action="/delete-reply" method="POST" style="display: inline;">
+                                    <input type="hidden" name="replyId" value="<%= reply.id %>">
+                                    <button type="submit" class="delete-button">Delete Reply</button>
+                                </form>
+                            </div>
+                        <% }); %>
+                    <% } else { %>
+                        <p>No replies yet.</p>
+                    <% } %>
+                </div>
+
+                <!-- Reply Section -->
+                <div class="reply-section">
+                    <button onclick="toggleReplyForm('<%= feedback.id %>')">Reply</button>
+                    <form id="reply-form-<%= feedback.id %>" style="display: none;" method="POST" action="/reply">
+                        <textarea name="reply" rows="3" placeholder="Write your reply here..."></textarea>
+                        <input type="hidden" name="feedbackId" value="<%= feedback.id %>">
+                        <button type="submit">Submit Reply</button>
+                    </form>
+                </div>
+            </div>
+        <% }); %>
+    </div>
+
+    <!-- Back to Home Button -->
+    <div style="text-align: center; margin-top: 20px;">
+        <button onclick="location.href='/index1.html'" style="padding: 10px 20px; font-size: 16px; cursor: pointer;">Back to Home</button>
+    </div>
+
+    <!-- JavaScript -->
     <script>
-        function editReply(replyId) {
-            const newReply = prompt("Enter new reply text:");
-            if (newReply) {
-                fetch('/edit-reply', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ replyId, reply: newReply })
-                }).then(response => {
-                    if (response.ok) window.location.reload();
-                });
-            }
+        function toggleReplyForm(feedbackId) {
+            const form = document.getElementById(`reply-form-${feedbackId}`);
+            form.style.display = form.style.display === "none" ? "block" : "none";
         }
 
-        function deleteReply(replyId) {
-            if (confirm("Are you sure you want to delete this reply?")) {
-                fetch('/delete-reply', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ replyId })
-                }).then(response => {
-                    if (response.ok) window.location.reload();
-                });
+        function toggleEditReplyForm(replyId) {
+            const form = document.getElementById(`edit-reply-form-${replyId}`);
+            form.style.display = form.style.display === "none" ? "block" : "none";
+        }
+    </script>
+    <script>
+        function toggleEditReplyForm(replyId) {
+            const form = document.getElementById(`edit-reply-form-${replyId}`);
+            if (form.style.display === "none" || form.style.display === "") {
+                form.style.display = "block"; // הצגת טופס העריכה
+            } else {
+                form.style.display = "none"; // הסתרת טופס העריכה
             }
         }
     </script>
