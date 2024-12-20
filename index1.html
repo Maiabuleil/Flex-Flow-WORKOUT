@@ -613,6 +613,24 @@
   .submit-button:hover {
       background-color: #cc0000;
   }
+  .view-feedback-button {
+    display: inline-block;
+    margin-top: 20px;
+    padding: 10px 20px;
+    font-size: 16px;
+    color: white;
+    background-color: #cc0000;
+    border: none;
+    border-radius: 5px;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.view-feedback-button:hover {
+    background-color: #b30000;
+}
+
 </style>
 <section class="Feedback" id="Feedback" aria-label="blog" style="background-image: url('./assets/images/young-woman-boxer-training-gym_1303-18842.jpg'); background-size: cover; background-position: center; background-repeat: no-repeat; background-attachment: fixed;">
   <div class="feedback-container">
@@ -661,6 +679,7 @@
           </div>
           <button type="submit" class="submit-button">Submit Feedback</button>
       </form>
+      <button onclick="window.location.href='/view-feedbacks'" class="view-feedback-button">View Feedbacks</button>
   </div>
   
 </section>
